@@ -32,7 +32,7 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
     # as cmdlet_<cmdletname>.json in the ./libs/help_data/ folder
 
     # Create help_data folder if it doest exists
-    if ((test-path ./libs/help_data) -and $phwriter) {
+    if (!(test-path ./libs/help_metadata) -and $phwriter) {
         New-Item -Path ./libs/help_metadata -ItemType Directory
     }
 
