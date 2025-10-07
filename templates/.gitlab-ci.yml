@@ -1,0 +1,271 @@
+#---------------------------------------------
+# Default values for all jobs unless overridden
+default:
+  image: docker.io/sgkens/phellams-psm-builder:latest
+  tags:
+    - docker
+  artifacts:
+    paths:
+      - ./dist/*
+      - ./coverage.xml
+    reports:
+      # This is the key line. It tells GitLab to load build.env
+      # and make its contents available as environment variables.
+      dotenv: build.env
+
+#---------------------------------------------
+# Define the stages of the pipeline
+stages:
+  - test
+  - build
+  - deploy
+  - release
+
+#---------------------------------------------
+# Define pipeline-wide workflow control
+workflow:
+  rules:
+    - when: always
+
+#---------------------------------------------
+# Define job templates for reuse (via YAML anchors)
+.test_template: &test_template
+  stage: test
+  # rules:
+  #   - if: '$CI_COMMIT_BRANCH == "main "'
+  #     when: on_success
+
+.deploy_template: &deploy_template
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+
+.release_template: &release_template
+  stage: release
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+
+
+#---------------------------------------------
+#! || Test Stage ||
+#==============================================
+#  ?- pester: Run Pester tests
+#  ?- pester_coverage: Run Pester tests with coverage
+#  ?- analyzer: Run ScriptAnalyzer for static code analysis
+#  ?- coverage: Generate code coverage report
+#---------------------------------------------
+pester:
+  <<: *test_template
+  script:
+    - Invoke-Pester -Script .\test\Test-Unit-Pester.ps1 -CI || exit 1
+
+pester_coverage:
+  <<: *test_template
+  script:
+    - Invoke-Pester -Script .\build\scripts\test\test-pester-before-build.ps1 -CI || exit 1
+
+analyzer:
+  <<: *test_template
+  script:
+    - .\devops\scripts\test\test_scriptanalyzer_before_build.ps1
+
+coverage:
+  <<: *deploy_template
+  script:
+    - .\devops\scripts\test\test-deploy-codecov-report.ps1
+  needs:
+    - job: pester_coverage
+      artifacts: true
+
+#---------------------------------------------
+# ! || Build Stage ||
+#==============================================
+# ?- build: Build the module using psmpacker
+# ?- nupkg_packages: Create NuGet packages
+#---------------------------------------------
+psmpacker-build:
+  stage: build
+  needs:
+    - job: pester
+      artifacts: false
+    - job: pester_coverage
+      artifacts: true
+    - job: analyzer
+      artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    - .\devops\scripts\build\build-module.ps1
+
+# psgallery, gitlab, github, proget(psgallery,nuget)
+nupsforge_general_nuget_packages:
+  stage: build
+  needs:
+    - job: psmpacker-build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    - ./devops/scripts/build/Build-package-generic-nuget.ps1
+
+nupsforge_chocolatey_nupsec:
+  stage: build
+  needs:
+    - job: psmpacker-build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    - ./devops/scripts/build/Build-package-choco.ps1
+
+mono_chocolatey_package:
+  stage: build
+  image: docker.io/chocolatey/choco:latest
+  tags:
+    - docker
+  needs:
+    - job: psmpacker-build
+      artifacts: true
+    - job: nupsforge_chocolatey_nupsec
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    - choco pack --outputdirectory "./dist/choco"
+
+zip_build:
+  stage: build
+  needs:
+    - job: psmpacker-build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+  script:
+    - ./devops/scripts/build/Build-package-psgallery.ps1
+
+#---------------------------------------------
+# ! || Deploy Stage ||
+#==============================================
+gitlab_nuget:
+  <<: *deploy_template
+  needs:
+    - job: nupsforge_general_nuget_packages
+      artifacts: true
+  tags:
+    - windows
+  script:
+    - ./devops/scripts/deploy/deploy-gitlab.ps1
+
+# proget_nuget:
+#   <<: *deploy_template
+#   needs:
+#     - job: nupsforge_general_nuget_packages
+#       artifacts: true
+#   script:
+#     - ./devops/scripts/deploy-proget.ps1
+
+#? chocolatey is not support on linux and will need a windows runner none-docker
+#? as build process is not supported on docker 
+#? Does modules require chocolatey?
+#? building choco from source with mono will encounter issues.
+#? Choco releases a docker image that can be used to build packages
+mono_choco_nuget:
+  <<: *deploy_template
+  image: docker.io/chocolatey/choco:latest
+  needs:
+    - job: nupsforge_chocolatey_nupsec
+      artifacts: true
+  tags:
+    - docker
+  script:
+    - choco push .\dist\choco\$ENV:CHOCO_NUPKG_PACKAGE_NAME.nupkg --source 'https://community.chocolatey.org/' --api-key $ENV:CHOCO_API_KEY
+
+# Deploy PSGallery module via zip and Publish modules
+psgal_zip:
+  <<: *deploy_template
+  needs:
+   - job: zip_build
+     artifacts: true
+  script:
+    - pwsh.exe
+    - .\build\scripts\deploy\deploy-psgallary.ps1
+
+#---------------------------------------------
+# ! || Release Stage ||
+#==============================================
+# ?- git_tag: Create GitLab tag from the current commit
+# ?- mirror: Mirror the module to GitHub and GitLab which includes tags howver mirrors do not have releases
+# ?- release: Create a release from the tag - gitlab
+# ?- release: Create a release from the tag - github
+#---------------------------------------------
+git_tag:
+  <<: *release_template
+  needs:
+    - job: psmpacker-build
+      artifacts: false
+  script:
+    - .\devops\scripts\release\create-tag.ps1
+
+mirror_pointer_github:
+  <<: *release_template
+  needs:
+    - job: git_tag
+      artifacts: false
+  script:
+    - .\build\scripts\mirror\mirror-pointer-github.ps1
+
+# mirror_pointer_gitlab:
+#   <<: *release_template
+#   needs:
+#     - job: git_tag
+#       artifacts: false
+#   script:
+#     - .\build\scripts\mirror-pointer-gitlab.ps1
+
+gitlab_release:
+  <<: *release_template
+  needs:
+    - job: nupsforge_general_nuget_packages
+      artifacts: true
+    - job: git_tag
+      artifacts: false
+  script:
+    - .\build\scripts\release\release-from-tag-gitlab.ps1
+
+github_release:
+  <<: *release_template
+  needs:
+    - job: nupsforge_general_nuget_packages
+      artifacts: true
+    - job: git_tag
+      artifacts: false
+    - job: mirror_pointer_github
+      artifacts: false
+    - job: gitlab_release
+      artifacts: false
+  script:
+    - .\build\scripts\release\release-from-tag-github.ps1
+
+codecov_release_coverage:
+  <<: *release_template 
+  needs: 
+    - job: pester_coverage
+      artifacts: true
+  script:
+    - .\build\scripts\release\release-codecov-report.ps1
+  
+
+# coveralls_release_coverage:
+#   <<: *release_template 
+#   needs: 
+#     - job: pester_coverage
+#       artifacts: true
+#   script:
+#     - .\build\scripts\release\release-codecov-report.ps1
