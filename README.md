@@ -1,12 +1,13 @@
 # Automator Devops
 
-Devops template used to build and publish modules to the PowerShell Gallery, choco, gitlab packages and publish release via gitlab, paried with the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image.
+Devops template used to build and publish modules to the PowerShell Gallery, choco, gitlab packages and publish release via gitlab, paried with the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image and [GitLab WorkFlow Template](https://gitlab.com/phellams/phellams-automator/-/blob/master/.gitlab-ci-template.yml)
 
-## 🥊 Dependancies for the Devops template
+## ⚜️ Dependancies for the Devops template
 
 - **Gitlab** - [https://gitlab.com/](https://gitlab.com/)
 - **Gitlab-Runner** - Gitlab Runner configured to run docker and shell scripts 
 - **Phellams Automator Docker Image** - [https://hub.docker.com/r/sgkens/phellams-automator](https://hub.docker.com/r/sgkens/phellams-automator)
+- **choco docker image** - [https://github.com/chocolatey/choco-docker](https://github.com/chocolatey/choco-docker)
 - **build_config.json** - Build config json file for the module in the root of the repo.
   - **Template**: `./automator/devops/templates/build_config-template.json`
 - **module_name.psd1** - Module manifest with populated meta data
@@ -17,9 +18,11 @@ Devops template used to build and publish modules to the PowerShell Gallery, cho
 - **gitlab-ci.yml** - gitlab workflow config yaml file.
   - **Template**: `./automator/devops/templates/.gitlab-ci.yml`
 
->❗ Note: before pushing and merging make sure to generate the semver using  `Get-GitAutoVersion` from `./automator/devops/scripts/core/Get-GitAutoVersion.psm1` and update the `modulename.psd1` with the `Major.Minor.Patch` version and the `Prerelease` version as the artifact, tags, and releases are affected by the `version` in the `modulename.psd1`
+>❗ Note: before pushing and merging make sure to generate the semver using  `Get-GitAutoVersion` from `./automator/devops/scripts/core/Get-GitAutoVersion.psm1` and update the `modulename.psd1` with the `Major.Minor.Patch` version and the `Prerelease` version as the artifact, tags, and releases are affected by the `version` in the `modulename.psd1`, dist output are automatically updated with the `version` in the `modulename.psd1` but some scripts still pull from root `modulename.psd1`
 
-## Scripts
+## ⚙️ Quick Start
+
+## ⚜️ Scripts
 
 Scripts are located in th `./automator/devops/scripts/` directory
 
@@ -27,29 +30,62 @@ Scripts are located in th `./automator/devops/scripts/` directory
   - Build scripts are located in the `./automator/devops/scripts/build/` directory.
   - Release scripts are located in the `./automator/devops/scripts/publish/` directory.
   - Deploy scripts are located in the `./automator/devops/scripts/deploy/` directory.
+  - Tools scripts are located in the `./automator/devops/scripts/tools/` directory.
 
-## Local build
+## ⚜️ Local builder
 
 The local build script `./automator/devops/scripts/local-build.ps1` can be used to build the module locally, the script will build module to `./dist/` directory. 
 
-🥊 Dependancies:
+‼️ **Dependancies:**
 
-Script Parameters:
-
+*Script Parameters:*
+  - `-Automator` - initates script `./automator-devops_backup/localbuild.ps1`
+    - 🔴 Requires Linux with docker or WLS@2 with docker, runs the scripts in the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image
   - `-build` - initates script `./automator/devops/scripts/build/Build-Module.ps1`
+    - Uses **PSMPacker** to build module to `./dist/modulename` directory [https://github.com/phellams/psmpacker](https://github.com/phellams/psmpacker)
   - `-psgal` - initates script `./automator/devops/scripts/build/build-package-psgallery.ps1`
-  - `-choco` - initates script `./automator/devops/scripts/build/build-package-choco.ps1`
-  - `-Nupkg` - initates script `./automator/devops/scripts/build/build-package-generic-nuget.ps1`
-  - `-ChocoNuSpec` - initates script `./automator/devops/scripts/build/Build-nuspec-choco.ps1`
-  - `-ChocoNupkgWindows` - initates script `./automator/devops/scripts/wip/build-package-choco-windows.ps1`
+    - Uses **NupsForge** to build `nupkg` package to `./dist/psgal` directory [https://github.com/phellams/nupsforge](https://github.com/phellams/nupsforge)
+  - `-nupkg` - initates script `./automator/devops/scripts/build/build-package-generic-nuget.ps1`
+    - Uses ***NupsForge** to build `nupkg` package to `./dist/nuget` directory
+  - `-choconuspec` - initates script `./automator/devops/scripts/build/Build-nuspec-choco.ps1`
+    - Creates only the **Choco** `.nuspec` file to `./dist/modulename` directory, choco image in linux must be build with the choco docker image, see [https://github.com/chocolatey/choco](https://github.com/chocolatey/choco) or [https://hub.docker.com/r/chocolatey/chocolatey](https://hub.docker.com/r/chocolatey/chocolatey)
+  - `-choconupkgwindows` - initates script `./automator/devops/scripts/wip/build-package-choco-windows.ps1`
+    - 🔴 Requires Windows with Choco installed, uses ***NupsForge** to build choco `nupkg`
+  - `-phwriter` - initates script `./automator/devops/scripts/build/generate-phwriter-metadata.ps1`
+    - Uses ***PHWriter** to generate formatted help text for the module and output to `./libs/help_metadata` directory before build copy
+
+### Examples
+
+🟪 Build module locally
+
+> ❗ The `-Automator` switch will run the scripts in the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image, requires docker in linux or docker in wsl in windows
+> ❗ if `.\phwriter-metadata.ps1` file is not found script will skip. 
 
 ```powershell
-# Example running in wsl2
+pwsh ./automator/devops/scripts/local-build.ps1 -build -phwriter
+```
+
+🟪 Build `.nupkg` package locally compatable with **Powershell Gallery**, **GitLab Packages** and **Proget PsGallery**
+
+```powershell
+pwsh ./automator/devops/scripts/local-build.ps1 -build -nupkg -phwriter
+```
+
+🟪 Build Choco `.nupkg` package locally
+
+```powershell
+pwsh ./automator/devops/scripts/local-build.ps1 -build -choconupkgwindows -phwriter
+```
+
+🟪 Build Choco `.nupkg`  package locally in linux using the choco docker image.
+
+```powershell
+pwsh ./automator/devops/scripts/local-build.ps1 -build -phwriter -choconuspec -ChocoPackage
 ```
 
 ## 🟢 Build Config Json Template
 
-🥽 **Example**:
+**Example**:
 
 ```json
 {
@@ -60,6 +96,8 @@ Script Parameters:
     "gitlabid_public": "id",
     "license": "MIT",
     "iconurl": "logo url",
+    "phwriter": true,
+    "phwriter_source": "url",
     "modulefiles": [
         "modulename.psm1",
         "modulename.psd1",
@@ -79,13 +117,26 @@ Script Parameters:
 }
 ```
 
+## 🟢 Pester Unit Test File
+
+Template look for a test file in the root module directory named `test-unit-pester.ps1` in the `./test/` directory.
+
 ## 🟢 PHWriter Template file
 
-> ❗ Note: the file name must be `phwriter-metadata.ps1`
+Template looks for a metadata file in the root module directory named `phwriter-metadata.ps1`.
 
-> ❗ Note: You can use the automated script to generate the file `./automator/devops/scripts/core/Generate-PhwriterMetadata.ps1`
+> ❗ Note: You can use the automated script to generate the file:
 
-🥽 **Example**:
+ ```powershell
+ ./automator-devops/scripts/tools/Generate-PhwriterMetadata.ps1
+ ``` 
+ or by using: 
+ 
+ ```powershell
+ ./automator-devops/local-build.ps1 -build -phwriter
+ ```
+
+**Example**:
 
 ```powershell
 # phwriter-metadata.ps1
@@ -147,9 +198,11 @@ $phwriter_metadata_array = @(
 
 ## 🟢 Powershell Module Manifest Template
 
+**Example**:
+
 ```powershell
 @{
-    RootModule         = 'zypline.psm1'
+    RootModule         = 'modulename.psm1'
     ModuleVersion      = '0.1.0'
     GUID               = 'ccc9be26-17aa-4a86-8d5b-14d6d15def37'
     Author             = 'Garvey k. Snow'
