@@ -8,7 +8,8 @@ param (
     [switch]$ChocoNuSpec,
     [switch]$ChocoPackage,
     [switch]$ChocoPackageWindows,
-    [switch]$Phwriter
+    [switch]$Phwriter,
+    [switch]$cleanup
 
 )
 # Import Module config
@@ -37,6 +38,8 @@ else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 
 # NOTE: =====================================
 # NOTE: LOCAL MACHINE ONLY WITH MODULES LOCATED IN G:\ AND /MNT/G/
+# TODO: #1 Once all required modules are release, change to pull from the psgal or from gitlab directly
+# TODO: #2 
 # local build on windows
 if ($isWindows -and !$Automator) {
     $interLogger.invoke("Local-Build", "Importing local modules from 'G:\' {kv:ARC=Windows}", $false, 'info')
@@ -100,11 +103,9 @@ if ($Nuget -and !$Automator) { ./automator-devops/scripts/build/build-package-ge
 if ($ChocoNuSpec -and !$Automator) { ./automator-devops/scripts/build/Build-nuspec-choco.ps1 }
 if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/wip/build-package-choco-windows.ps1 }
 if ($Phwriter) {./automator-devops/scripts/tools/generate-phwriter-metadata.ps1 }
-
+if ($cleanup) { ./automator-devops/run-cleanup.ps1 }
 #TODO: add switch for clean up so it can be run sperately if needed
 #TODO: move run-cleanup to scripts dir
-
-./automator-devops/run-cleanup.ps1
 
 # TEST DEPLOY
 #./devops/scripts/deploy/deploy-gitlab.ps1
