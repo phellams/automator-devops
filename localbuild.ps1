@@ -73,10 +73,10 @@ if ($Automator) {
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
     $build_package_generic_nuget = "./automator-devops/scripts/build/build-package-generic-nuget.ps1;"
     $build_choco_nuspec          = "./automator-devops/scripts/build/build-nuspec-choco.ps1;"
-    $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1"
+    $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1;"
     $build_package_choco         = "./automator-devops/scripts/build/build-package-choco.sh"
-    $tools_phwriter_metadata     = "./automator-devops/scripts/tools/generate-phwriter-metadata.ps1"
-    $pester_test_script          = "./automator-devops/scripts/test/test-pester-before-build.ps1"
+    $tools_phwriter_metadata     = "./automator-devops/scripts/tools/generate-phwriter-metadata.ps1;"
+    $pester_test_script          = "./automator-devops/scripts/test/test-pester-before-build.ps1;"
 
     if($pester){ $scripts_to_run += $pester_test_script }
     if($build){ $scripts_to_run += $build_Module }
