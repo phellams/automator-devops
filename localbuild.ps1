@@ -65,8 +65,6 @@ if ($isLinux -and !$Automator) {
 # docker phellams/automator
 if ($Automator) {
 
-    git config --global --add safe.directory /$moduleName
-
     $docker_image = "docker.io/sgkens/phellams-automator:latest"
 
     $interLogger.invoke("Local-Build", "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
@@ -79,6 +77,7 @@ if ($Automator) {
     $build_package_choco         = "./automator-devops/scripts/build/build-package-choco.sh"
     $tools_phwriter_metadata     = "./automator-devops/scripts/tools/generate-phwriter-metadata.ps1;"
     $pester_test_script          = "./automator-devops/scripts/test/test-pester-before-build.ps1;"
+    $SafeDirectory               = "git config --global --add safe.directory /$ModuleName"
 
     if($pester){ $scripts_to_run += $pester_test_script }
     if($build){ $scripts_to_run += $build_Module }
@@ -90,12 +89,12 @@ if ($Automator) {
         if(!$ChocoNuSpec -or !$build){
             throw [System.Exception]::new("ChocoMonoPackage requires ChocoNuSpec and Build")
         }
-        docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $scripts_to_run"
+        docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $SafeDirectory; $scripts_to_run"
         $docker_image = "docker.io/chocolatey/choco:latest"
         $interLogger.invoke("Local-Build", "Switching to Choco on {kv:DockerImage=$docker_image}", $false, 'info')
         docker run --rm -v .:/$ModuleName $docker_image bash -c "cd /$modulename; $build_package_choco"
     }else{
-        docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $scripts_to_run"
+        docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $SafeDirectory; $scripts_to_run"
     }
 }
 
