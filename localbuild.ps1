@@ -9,6 +9,7 @@ param (
     [switch]$ChocoPackage,
     [switch]$ChocoPackageWindows,
     [switch]$Phwriter,
+    [switch]$pester,
     [switch]$cleanup
 
 )
@@ -75,12 +76,14 @@ if ($Automator) {
     $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1"
     $build_package_choco         = "./automator-devops/scripts/build/build-package-choco.sh"
     $tools_phwriter_metadata     = "./automator-devops/scripts/tools/generate-phwriter-metadata.ps1"
+    $pester_test_script          = "./automator-devops/scripts/test/test-pester-before-build.ps1"
 
+    if($pester){ $scripts_to_run += $pester_test_script }
     if($build){ $scripts_to_run += $build_Module }
     if($psgal){ $scripts_to_run += $build_package_psgallery }
     if($nuget){ $scripts_to_run += $build_package_generic_nuget }
     if($Phwriter) { $scripts_to_run += $tools_phwriter_metadata }
-    if ($ChocoNuSpec) { $scripts_to_run += $build_choco_nuspec  }
+    if($ChocoNuSpec) { $scripts_to_run += $build_choco_nuspec  }
     if ($ChocoPackage) { 
         if(!$ChocoNuSpec -or !$build){
             throw [System.Exception]::new("ChocoMonoPackage requires ChocoNuSpec and Build")
@@ -97,12 +100,13 @@ if ($Automator) {
 # =================================
 # BUILD SCRIPTS
 # =================================
+if ($pester -and !$automator) { ./automator-devops/scripts/test/test-pester-before-build.ps1 }
+if ($Sa -and !$automator) { ./automator-devops/scripts/test/test-sa-before-build.ps1 }
 if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1 }
 if ($psgal -and !$Automator) { ./automator-devops/scripts/build/build-package-psgallery.ps1 }
 if ($Nuget -and !$Automator) { ./automator-devops/scripts/build/build-package-generic-nuget.ps1 }
 if ($ChocoNuSpec -and !$Automator) { ./automator-devops/scripts/build/Build-nuspec-choco.ps1 }
 if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/wip/build-package-choco-windows.ps1 }
-if ($Phwriter) {./automator-devops/scripts/tools/generate-phwriter-metadata.ps1 }
 if ($cleanup) { ./automator-devops/run-cleanup.ps1 }
 #TODO: add switch for clean up so it can be run sperately if needed
 #TODO: move run-cleanup to scripts dir
