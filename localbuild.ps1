@@ -65,6 +65,8 @@ if ($isLinux -and !$Automator) {
 # docker phellams/automator
 if ($Automator) {
 
+    git config --global --add safe.directory /$moduleName
+
     $docker_image = "docker.io/sgkens/phellams-automator:latest"
 
     $interLogger.invoke("Local-Build", "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
