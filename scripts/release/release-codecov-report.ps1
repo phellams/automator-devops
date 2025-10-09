@@ -38,7 +38,7 @@ if (!(Test-Path $coverageReportFile)) {
 # You can also use -f to explicitly specify the coverage file.
 $interLogger.invoke("release", "Uploading coverage report to Codecov for {kv:module=$ModuleName}", $false, 'info')
 try {
-    & $codecovUploaderPath upload-process -r "$gitgroup/$ModuleName" -t $env:codecov_token -f $coverageReportFile -v # -v for verbose output
+    & $codecovUploaderPath upload-process -r "$gitgroup/$ModuleName" -t $ENV:CODECOV_TOKEN -f $coverageReportFile -v # -v for verbose output
     $interLogger.invoke("release", "Codecov upload completed for {kv:module=$ModuleName}", $false, 'info')
 }
 catch {
