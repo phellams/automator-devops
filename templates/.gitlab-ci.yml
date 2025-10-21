@@ -14,7 +14,6 @@ default:
       - |
         git fetch --all
         git clone https://gitlab.com/phellams/automator-devops.git
-        git config --global --add safe.directory ./
 
 #---------------------------------------------
 # Define the stages of the pipeline
@@ -36,48 +35,34 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
       when: on_success
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - "docs/**/*"
-        - "**/*.md"
-      when: never 
-    - when: on_success 
-
-.build_template: &build_template
-  stage: build
-  rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
-      when: on_success
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - "docs/**/*"
         - "**/*.md"
-      when: never 
-    - when: on_success
-
-.release_template: &release_template
-  stage: release
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: on_success
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - "docs/**/*"
-        - "**/*.md"
-      when: never 
-    - when: on_success
+      when: never
 
 .deploy_template: &deploy_template
   stage: deploy
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: on_success
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
       changes:
         - "docs/**/*"
         - "**/*.md"
       when: never
-    - when: on_success 
+
+.release_template: &release_template
+  stage: release
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
+
 
 #---------------------------------------------
 #! || Test Stage ||
@@ -109,48 +94,81 @@ pester_coverage:
 # ?- nupkg_packages: Create NuGet packages
 #---------------------------------------------
 psmpacker_build:
-  <<: *build_template
+  stage: build
   needs:
     - job: pester
       artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
+
   script:
     - |
       pwsh -c ./automator-devops/scripts/build/build-module.ps1 || exit 1
       
 analyzer:
-  <<: *build_template
+  stage: build
   needs:
     - job: psmpacker_build
       artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
   script:
     - |
       pwsh -c ./automator-devops/scripts/test/test-sa-before-build.ps1
 
 # psgallery, gitlab, github, proget(psgallery,nuget)
 nupsforge_general_nuget_package:
-  <<: *build_template
+  stage: build
   needs:
     - job: psmpacker_build
       artifacts: true
     - job: analyzer
       artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
   script:
     - |
       pwsh -c ./automator-devops/scripts/build/build-package-generic-nuget.ps1 || exit 1
 
 nupsforge_chocolatey_nupsec_file:
-  <<: *build_template
+  stage: build
   needs:
     - job: psmpacker_build
       artifacts: true
     - job: analyzer
       artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
   script:
     - |
       pwsh -c ./automator-devops/scripts/build/build-nuspec-choco.ps1 || exit 1
 
 mono_chocolatey_package:
-  <<: *build_template
+  stage: build
   image: docker.io/chocolatey/choco:v2.5.1
   tags:
     - docker
@@ -161,6 +179,14 @@ mono_chocolatey_package:
       artifacts: true
     - job: analyzer
       artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
   before_script:
     - |
       echo "Install git cli"
@@ -173,12 +199,20 @@ mono_chocolatey_package:
       ./automator-devops/scripts/build/build-package-choco.sh || exit 1
 
 zip_build:
-  <<: *build_template
+  stage: build
   needs:
     - job: nupsforge_general_nuget_package
       artifacts: true
     - job: analyzer
       artifacts: false
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        - "docs/**/*"
+        - "**/*.md"
+      when: never
   script:
     - |
       pwsh -c ./automator-devops/scripts/build/build-package-psgallery.ps1 || exit 1
