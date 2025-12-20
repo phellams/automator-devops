@@ -87,7 +87,10 @@ $global:__automator_devops = @{
             # NOTE: Add in more options
             'inf' { $string += "$(csole -s "INF" -c cyan -bgcolor gray -format bold) ≡" }
             'wrn' { $string += "$(csole -s "WRN" -c black -bgcolor yellow -format bold) ≡" }
-            'err' { $string += "$(csole -s "ERR" -c white -bgcolor red -format bold) ≡" }
+            'err' { $string += "$(csole -s "ERR" -c white -bgcolor red -format bold,underline) ≡" }
+            'prop' { $string += "$(csole -s "PROPERTY" -c white -format bold,underline) ≡" }
+            'type' { $string += "$(csole -s "TYPE" -c white -format bold) ≡" }
+            'value' { $string += "$(csole -s "VALUE" -c white -format bold) ≡" }
             default { }
         }
 
