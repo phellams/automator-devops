@@ -44,7 +44,7 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
         # Add Module Name
         $helpdata.name = $modulename
         # Add version to each cmdlet propery
-        $helpdata.version = $moduleversion
+        $helpdata.version = $AutoVersion
         # Add Padding to each cmdlet propery
         $helpdata.padding = 1
         # Add indenting to each cmdlet propery
