@@ -6,7 +6,13 @@
     "gitlabid": "",
     "gitlabid_public": "72971048",
     "license": "MIT",
-    "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/phellams-logo-128x128.png",
+    "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/dist/png/phellams-logo-128x128.png",
+    "phwriter": true,
+    "phwriter_source": "https://gitlab.com/phellams/fastfsc/-/blob/main/readme.md",
+    "pester_test_files": [
+        ".\\cmdlets\\*.psm1",
+        ".\\*.psm1"
+    ],
     "modulefiles": [
         "fastfsc.psm1",
         "fastfsc.psd1",
@@ -16,6 +22,8 @@
         "readme.txt"
     ],
     "modulefolders": [
+        "cmdlets",
+        "libs",
         "tools"
     ],
     "moduleexclude": [
