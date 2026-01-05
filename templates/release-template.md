@@ -1,5 +1,6 @@
 # 🍹REPONAME_PLACE_HOLDER.VERSION_AND_PRERELEASE_PLACE_HOLDER
 
+RELEASE_NOTES
 
 ### **░░░░▌ Build Information ▐░░░░**
 
