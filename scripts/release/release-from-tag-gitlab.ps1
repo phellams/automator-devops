@@ -74,17 +74,7 @@ $psgal_generic_package
 
 
 # Generation Release notes with commitfusion using -OnlyAhead param switch
-# Expected Workflow: develop -> NewFeatBranch -> MergeDevelop -> New-ReleaseBranch -> mergeMain
-$release_notes = Get-ReleaseNotes -OnlyAhead `
-                                  -Notes `
-                                  -FeatureAdditions `
-                                  \-FeatureNotes `
-                                  -BugFixes `
-                                  -BreakingChanges `
-                                  -CommitLink `
-                                  -CommitLinkPrefix GitLab
-                              
-
+$release_notes Get-releaseNotes -NameSpace phellams -FeatureNotes -BreakingChanges -FeatureAdditions -Notes -FeatureUpdates -CommitLink -CommitLinkPrefix gitlab -AheadOnly
 
 
 # NOTE! Add back in release_notes from Get-ReleaseNotes -> Commitfusion
