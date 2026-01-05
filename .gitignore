@@ -6,3 +6,4 @@ coverage.xml
 testResults.xml
 libs/help_metadata
 automator-devops
+commit-helper.ps1
