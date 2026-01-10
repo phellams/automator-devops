@@ -73,6 +73,11 @@ $psgal_generic_package
 [console]::writeline("====================================")
 
 
+# Generation Release notes with commitfusion using -OnlyAhead param switch
+$release_notes Get-releaseNotes -NameSpace phellams -FeatureNotes -BreakingChanges -FeatureAdditions -Notes -FeatureUpdates -CommitLink -CommitLinkPrefix gitlab -AheadOnly
+
+
+# NOTE! Add back in release_notes from Get-ReleaseNotes -> Commitfusion
 
 $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$modulename" `
                                       -replace 'VERSION_AND_PRERELEASE_PLACE_HOLDER', "$ModuleVersion" `
@@ -87,7 +92,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'NUGET_NUPKG_HASH', $nuget_generic_package.file_sha256 `
                                       -replace 'CHOCO_NUPKG_HASH', $choco_generic_package.file_sha256 `
                                       -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256
-
+                                      -replace 'RELEASE_NOTES', $release_notes
 $interLogger.invoke("release", "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
 
 $assets = @{
