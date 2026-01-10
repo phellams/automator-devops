@@ -92,7 +92,11 @@ Build-Module -SourcePath ./ `
              -Version $AutoVersion
             #  -Dependencies @(@{type="module";name="quicklog";version="1.2.3"})
 
-
+#!FIX: rename README.md to readme.md as nuget is case sensitive
+if (Test-Path -Path "./dist/$ModuleName/README.md") {
+    Rename-Item -Path "./dist/$ModuleName/README.md" -NewName "readme.md" -Force
+    $interLogger.invoke("Build", "Renamed README.md to readme.md for nuget compliance", $false, 'info')
+}
 
 # Create ENV as Choco image does not support powershell execution
 # Set the choco package name as a ENV and use choco push
