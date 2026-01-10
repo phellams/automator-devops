@@ -1,1 +1,0 @@
-sudo docker run --rm -v .:/zypline sgkens/phellams-automator:latest pwsh -c 'cd /zypline && .\devops\scripts\test-deploy-codecov-report.ps1
