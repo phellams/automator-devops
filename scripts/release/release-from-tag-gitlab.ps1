@@ -74,7 +74,14 @@ $psgal_generic_package
 
 
 # Generation Release notes with commitfusion using -OnlyAhead param switch
-$release_notes Get-releaseNotes -NameSpace phellams -FeatureNotes -BreakingChanges -FeatureAdditions -Notes -FeatureUpdates -CommitLink -CommitLinkPrefix gitlab -AheadOnly
+$release_notes = Get-releaseNotes -NameSpace phellams -FeatureNotes -BreakingChanges -FeatureAdditions -Notes -FeatureUpdates -CommitLink -CommitLinkPrefix gitlab -AheadOnly
+
+if ($release_notes.Length -eq 0) {
+    $interLogger.invoke("release", "No release notes generated for {kv:module=$gitgroup/$modulename}", $false, 'info')
+    $release_notes = "No release notes available."
+} else {
+    $interLogger.invoke("release", "Generated release notes for {kv:module=$gitgroup/$modulename}", $false, 'info')
+}
 
 
 # NOTE! Add back in release_notes from Get-ReleaseNotes -> Commitfusion
