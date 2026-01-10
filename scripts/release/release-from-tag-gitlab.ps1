@@ -2,6 +2,7 @@ using module ../core/core.psm1
 using module ../core/Test-GitLabReleaseVersion.psm1
 using module ../core/Get-RemoteFileHash.psm1
 using module ../core/Request-GenericPackage.psm1
+using module ../core/Get-ReleaseNotes.psm1
 
 #---UI ELEMENTS Shortened-------------
 $interLogger = $global:__automator_devops.interLogger
@@ -58,6 +59,7 @@ $generic_package = Request-GenericPackage -ProjectId $ENV:CI_PROJECT_ID `
                                           -PackageVersion $moduleversion `
                                           -NameSpace $ENV:CI_PROJECT_NAMESPACE `
                                           -projectName $ENV:CI_PROJECT_NAME
+
 $nuget_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion.nupkg"} | Sort-Object created_at | Select-Object -First 1   
 $choco_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-choco.nupkg"} | Sort-Object created_at | Select-Object -First 1   
 $psgal_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-psgal.zip"} | Sort-Object created_at | Select-Object -First 1                      
@@ -103,7 +105,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'CI_PROJECT_ID', "$env:CI_PROJECT_ID" `
                                       -replace 'NUGET_NUPKG_HASH', $nuget_generic_package.file_sha256 `
                                       -replace 'CHOCO_NUPKG_HASH', $choco_generic_package.file_sha256 `
-                                      -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256
+                                      -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256 `
                                       -replace 'RELEASE_NOTES', $release_notes
 $interLogger.invoke("release", "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
 
