@@ -145,7 +145,7 @@ $body = @{
 } | ConvertTo-Json -Depth 10
 
 $headers = @{
-  "PRIVATE-TOKEN" = "$env:CI_JOB_TOKEN"
+  "PRIVATE-TOKEN" = "$env:GITLAB_API_KEY"
   "Content-Type"  = "application/json"
 }
 
