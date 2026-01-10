@@ -144,11 +144,6 @@ $body = @{
     assets      = $assets
 } | ConvertTo-Json -Depth 10
 
-$headers = @{
-  "PRIVATE-TOKEN" = "$env:GITLAB_API_KEY"
-  "Content-Type"  = "application/json"
-}
-
 $interLogger.invoke("release", "DEBUG INFO", $false, 'info')
 [console]::writeline("====================================")
 $body
@@ -159,7 +154,7 @@ try {
   
   $response = Invoke-RestMethod -Uri "$env:CI_API_V4_URL/projects/$ENV:CI_PROJECT_ID/releases" `
                                 -Method 'POST' `
-                                -Headers $headers `
+                                -Headers @{ "PRIVATE-TOKEN" = "$env:GITLAB_API_KEY"; "Content-Type"  = "application/json" } `
                                 -Body $body 
   
   $interLogger.invoke("release", "Successfully created release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
@@ -167,5 +162,6 @@ try {
 }
 catch {
     $interLogger.invoke("release", "Failed to create release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}: {kv:error=$($_.exception.message)}", $false, 'error')
+    $response
     exit 1
 }
