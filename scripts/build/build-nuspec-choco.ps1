@@ -38,7 +38,7 @@ if ($ModuleManifest.PrivateData.PSData.ReleaseNotes -is [array]) {
 }
 else {
   [console]::writeline("Release notes must be an array of strings in the module manifest.")
-  exit 1
+  # assume no release notes
 }
 
 if ($Notes.Length -gt 0) {
@@ -63,7 +63,7 @@ $NuSpecParamsChoco = @{
   MailingListUrl    = $ModuleManifest.PrivateData.PSData.MailingListUrl
   bugTrackerUrl     = $ModuleManifest.PrivateData.PSData.BugTrackerUrl
   LicenseUrl        = $ModuleManifest.PrivateData.PSData.LicenseUrl
-  ReleaseNotes      = $releaseNotes
+  ReleaseNotes      = $releaseNotes ? $releaseNotes : "No release notes provided."
   company           = $ModuleManifest.CompanyName
   Tags              = $ModuleManifest.Tags
   dependencies      = $ModuleManifest.ExternalModuleDependencies
