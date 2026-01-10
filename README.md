@@ -2,7 +2,7 @@
 
 Devops template used to build and publish modules to the PowerShell Gallery, choco, gitlab packages and publish release via gitlab, paried with the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image and [GitLab WorkFlow Template](https://gitlab.com/phellams/phellams-automator/-/blob/master/.gitlab-ci-template.yml)
 
-## ⚜️ Dependancies for the Devops template
+## Dependancies for the Devops template
 
 - **Gitlab** - [https://gitlab.com/](https://gitlab.com/)
 - **Gitlab-Runner** - Gitlab Runner configured to run docker and shell scripts 
@@ -20,9 +20,13 @@ Devops template used to build and publish modules to the PowerShell Gallery, cho
 
 >❗ Note: before pushing and merging make sure to generate the semver using  `Get-GitAutoVersion` from `./automator/devops/scripts/core/Get-GitAutoVersion.psm1` and update the `modulename.psd1` with the `Major.Minor.Patch` version and the `Prerelease` version as the artifact, tags, and releases are affected by the `version` in the `modulename.psd1`, dist output are automatically updated with the `version` in the `modulename.psd1` but some scripts still pull from root `modulename.psd1`
 
-## ⚙️ Quick Start
+## Quick Start
 
-## ⚜️ Scripts
+1. Edit the `./automator/devops/templates/build_config-template.json` file for the module you want to build
+2. Edit the `./automator/devops/templates/modulename.psd1` file for the module you want to build
+3. Run `pwsh ./automator/devops/scripts/local-build.ps1 -Automator -build -phwriter`
+
+## Scripts
 
 Scripts are located in th `./automator/devops/scripts/` directory
 
@@ -32,7 +36,7 @@ Scripts are located in th `./automator/devops/scripts/` directory
   - Deploy scripts are located in the `./automator/devops/scripts/deploy/` directory.
   - Tools scripts are located in the `./automator/devops/scripts/tools/` directory.
 
-## ⚜️ Local builder
+## Local builder
 
 The local build script `./automator/devops/scripts/local-build.ps1` can be used to build the module locally, the script will build module to `./dist/` directory. 
 
