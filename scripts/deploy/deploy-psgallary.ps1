@@ -21,9 +21,10 @@ else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 # Check if module version exists
 $interLogger.invoke("deploy", "Checking if module version {kv:version=$ModuleVersion} exists in PSGallery", $false, 'info')
 [string]$psgal_currentnversion = Find-Module -Name $modulename `
-                                            -RequiredVersion $ModuleVersion `
-                                            -Repository 'psgallery' `
-                                            -AllowPrerelease | Select-Object -ExpandProperty Version
+                                             -RequiredVersion $ModuleVersion `
+                                             -Repository 'psgallery' `
+                                             -ErrorAction SilentlyContinue `
+                                             -AllowPrerelease | Select-Object -ExpandProperty Version
 
 if ($psgal_currentnversion -eq $ModuleVersion) {
   $interLogger.invoke("deploy", "Module version {kv:version=$ModuleVersion} already exists in PSGallery, skipping publish", $false, 'info')
