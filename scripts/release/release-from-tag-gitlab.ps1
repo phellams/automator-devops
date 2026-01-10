@@ -15,7 +15,7 @@ $modulename     = $Moduleconfig.moduleName
 $ModuleManifest = Test-ModuleManifest -path "./dist/$modulename/$modulename.psd1"
 $gitgroup       = $Moduleconfig.gitgroup
 $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
-$ModuleVersion  = $ModuleManifest.Version
+$ModuleVersion  = $ModuleManifest.Version.ToString()
 #---CONFIG----------------------------
 
 # Parse release body
@@ -105,7 +105,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'GITGROUP_PLACE_HOLDER', "$gitgroup" `
                                       -replace 'ONLY_VERSION_PLACE_HOLDER', "$ModuleVersion_no_prerelease" `
                                       -replace 'CI_PIPELINE_ID', "$env:CI_PIPELINE_ID" `
-                                      -replace 'CI_PIPELINE_URL', "$env:CI_PIPELINE_URL" `
+                                      -replace 'CI_PIPELINE_URL',  "$env:CI_PIPELINE_URL" `
                                       -replace 'CI_JOB_ID', "$env:CI_JOB_ID" `
                                       -replace 'COMMIT_SHA', "$env:CI_COMMIT_SHA" `
                                       -replace 'BUILD_DATE', "$(Get-Date -Date $env:CI_PIPELINE_CREATED_AT)" `
@@ -162,6 +162,6 @@ try {
 }
 catch {
     $interLogger.invoke("release", "Failed to create release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}: {kv:error=$($_.exception.message)}", $false, 'error')
-    $response
+    $_
     exit 1
 }
