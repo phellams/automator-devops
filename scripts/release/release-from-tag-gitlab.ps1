@@ -91,12 +91,19 @@ if ($release_notes.Length -eq 0) {
 }
 
 
-# NOTE! Add back in release_notes from Get-ReleaseNotes -> Commitfusion
+# NOTE! if $moduleversion has prerelease info, make sure to adjust the release template accordingly
+# NOTE! if not then do nothing
+if ($ModuleVersion -contains "-") {
+    $ModuleVersion_no_prerelease = $ModuleVersion.split("-")[0]
+} else {
+    $ModuleVersion_no_prerelease = $ModuleVersion
+}
+
 
 $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$modulename" `
                                       -replace 'VERSION_AND_PRERELEASE_PLACE_HOLDER', "$ModuleVersion" `
                                       -replace 'GITGROUP_PLACE_HOLDER', "$gitgroup" `
-                                      -replace 'ONLY_VERSION_PLACE_HOLDER', "$($ModuleVersion.split("-")[0])" `
+                                      -replace 'ONLY_VERSION_PLACE_HOLDER', "$ModuleVersion_no_prerelease" `
                                       -replace 'CI_PIPELINE_ID', "$env:CI_PIPELINE_ID" `
                                       -replace 'CI_PIPELINE_URL', "$env:CI_PIPELINE_URL" `
                                       -replace 'CI_JOB_ID', "$env:CI_JOB_ID" `
@@ -107,6 +114,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'CHOCO_NUPKG_HASH', $choco_generic_package.file_sha256 `
                                       -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256 `
                                       -replace 'RELEASE_NOTES', $release_notes
+
 $interLogger.invoke("release", "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
 
 $assets = @{
