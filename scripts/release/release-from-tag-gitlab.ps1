@@ -17,25 +17,36 @@ $gitgroup       = $Moduleconfig.gitgroup
 $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
 $ModuleVersion  = $ModuleManifest.Version.ToString()
 # add v prefix if not exists
-$ModuleVersion = "v" + $ModuleVersion
+$tagVersion = "v" + $ModuleVersion
 #---CONFIG----------------------------
 
 # Parse release body
 $release_template = Get-Content -Path './automator-devops/templates/release-template.md' -Raw
 
 
+# PreRelease
 if (!$prerelease -or $prerelease.Length -eq 0) { 
   $ModuleVersion = $ModuleVersion
+  $tagVersion = $tagVersion
   $release_template = $release_template -replace 'PRERELEASE_CHOCO_PLACE_HOLDER', "" `
                                         -replace 'PRERELEASE_PSGAL_PLACE_HOLDER', "" `
                                         -replace 'PRERELEASE_GITLAB_PLACE_HOLDER' , ""
 }
 else { 
   $ModuleVersion = "$ModuleVersion-$prerelease" 
+  $tagVersion = "$tagVersion-$prerelease"
   $release_template = $release_template -replace 'PRERELEASE_CHOCO_PLACE_HOLDER', "--prerelease $prerelease" `
                                         -replace 'PRERELEASE_PSGAL_PLACE_HOLDER', "-AllowPrerelease" `
                                         -replace 'PRERELEASE_GITLAB_PLACE_HOLDER' , "-pre"
 }
+
+if ($ModuleVersion -contains "-") {
+  $ModuleVersion_no_prerelease = $ModuleVersion.split("-")[0]
+}
+else {
+  $ModuleVersion_no_prerelease = $ModuleVersion
+}
+
 
 if (Test-GitLabReleaseVersion -reponame "$gitgroup/$modulename" -version $ModuleVersion) {
   $interLogger.invoke("release", "Release {kv:version=$ModuleVersion} already exists for {kv:module=$gitgroup/$modulename}. Skipping release creation.", $false, 'info')
@@ -93,17 +104,8 @@ if ($release_notes.Length -eq 0) {
 }
 
 
-# NOTE! if $moduleversion has prerelease info, make sure to adjust the release template accordingly
-# NOTE! if not then do nothing
-if ($ModuleVersion -contains "-") {
-    $ModuleVersion_no_prerelease = $ModuleVersion.split("-")[0]
-} else {
-    $ModuleVersion_no_prerelease = $ModuleVersion
-}
-
-
 $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$modulename" `
-                                      -replace 'VERSION_AND_PRERELEASE_PLACE_HOLDER', "$ModuleVersion" `
+                                      -replace 'VERSION_AND_PRERELEASE_PLACE_HOLDER', "$tagVersion" `
                                       -replace 'GITGROUP_PLACE_HOLDER', "$gitgroup" `
                                       -replace 'ONLY_VERSION_PLACE_HOLDER', "$ModuleVersion_no_prerelease" `
                                       -replace 'CI_PIPELINE_ID', "$env:CI_PIPELINE_ID" `
@@ -141,7 +143,7 @@ $assets = @{
 
 $body = @{
     name        = "v$ModuleVersion"
-    tag_name    = $ModuleVersion
+    tag_name    = $tagVersion
     description = $release_template
     assets      = $assets
 } | ConvertTo-Json -Depth 10
