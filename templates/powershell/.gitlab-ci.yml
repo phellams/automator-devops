@@ -40,7 +40,7 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
       when: on_success
-    - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*$/
+    - if: $CI_COMMIT_TAG =~ /^v?(?<Major>\d+)\.(?<Minor>\d+)\.(?<Patch>\d+)(?:-(?<PreRelease>[a-zA-Z0-9-.]+))?(?:\+(?<BuildMetadata>[a-zA-Z0-9-.]+))?$/
       when: always
 
 .build_template: &build_template
@@ -48,19 +48,19 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE != "merge_request_event"'
       when: always
-    - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*$/
+    - if: $CI_COMMIT_TAG =~ /^v?(?<Major>\d+)\.(?<Minor>\d+)\.(?<Patch>\d+)(?:-(?<PreRelease>[a-zA-Z0-9-.]+))?(?:\+(?<BuildMetadata>[a-zA-Z0-9-.]+))?$/
       when: always
 
 .release_template: &release_template
   stage: release
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*$/
+    - if: $CI_COMMIT_TAG =~ /^v?(?<Major>\d+)\.(?<Minor>\d+)\.(?<Patch>\d+)(?:-(?<PreRelease>[a-zA-Z0-9-.]+))?(?:\+(?<BuildMetadata>[a-zA-Z0-9-.]+))?$/
       when: on_success
 
 .deploy_template: &deploy_template
   stage: deploy
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+.*$/
+    - if: $CI_COMMIT_TAG =~ /^v?(?<Major>\d+)\.(?<Minor>\d+)\.(?<Patch>\d+)(?:-(?<PreRelease>[a-zA-Z0-9-.]+))?(?:\+(?<BuildMetadata>[a-zA-Z0-9-.]+))?$/
       when: on_success
 
 .deploy_template_choco: &deploy_template_choco
@@ -68,7 +68,9 @@ workflow:
   image: docker.io/chocolatey/choco:v2.5.1
   tags:
     - docker
-  when: manual
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v?(?<Major>\d+)\.(?<Minor>\d+)\.(?<Patch>\d+)(?:-(?<PreRelease>[a-zA-Z0-9-.]+))?(?:\+(?<BuildMetadata>[a-zA-Z0-9-.]+))?$/
+      when: manual
 
 # ____________________________________________________________
 # ########|----> |||| Test Stage |||| <----###################
