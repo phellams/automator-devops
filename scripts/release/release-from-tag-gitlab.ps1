@@ -16,6 +16,8 @@ $ModuleManifest = Test-ModuleManifest -path "./dist/$modulename/$modulename.psd1
 $gitgroup       = $Moduleconfig.gitgroup
 $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
 $ModuleVersion  = $ModuleManifest.Version.ToString()
+# add v prefix if not exists
+$ModuleVersion = "v" + $ModuleVersion
 #---CONFIG----------------------------
 
 # Parse release body
