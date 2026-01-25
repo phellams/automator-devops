@@ -12,7 +12,7 @@
     AliasesToExport    = @()
     PrivateData        = @{
         PSData = @{
-            Tags                     = @('Help', 'Formatting', 'CLI', 'PowerShell', 'Documentation')
+            Tags                     = @('''Help', 'Formatting', 'CLI', 'PowerShell', 'Documentation')
             ReleaseNotes             = @{
                 # '1.2.1' = 'Initial release with New-PHWriter cmdlet for custom help formatting and enhanced layout.'
             }
@@ -21,6 +21,8 @@
             ProjectUri               = 'https://gitlab.com/phellams/zypline.git'
             IconUri                  = 'https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/zypline/dist/png/zypline-logo-128x128.png'
             # CHOCOLATE ---------------------
+            ChocoDescription         = 'A PowerShell module for advanced file and folder searching with configuration management.'
+            ChocoTitle               = 'Zypline - A PowerShell module for advanced file and folder searching with configuration management.'
             LicenseUrl               = 'https://choosealicense.com/licenses/mit'
             ProjectUrl               = 'https://github.com/phellams/zypline'
             IconUrl                  = 'https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/zypline/zypline-logo-128x128.png'

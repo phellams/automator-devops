@@ -1,22 +1,28 @@
 {
-    "modulename": "fastfsc",
+    "modulename": "pwsl",
     "releasetype": "public",
     "gituser": "sgkens",
     "gitgroup": "phellams",
     "gitlabid": "",
-    "gitlabid_public": "72971048",
+    "gitlabid_public": "77419357",
     "license": "MIT",
-    "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/phellams-logo-128x128.png",
+    "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/pwsl/dist/png/pwsl-128x128.png",
+    "phwriter": true,
+    "phwriter_source": "https://gitlab.com/phellams/#function-reference",
+    "pester_test_files": [
+        ".\\*.psm1"
+    ],
     "modulefiles": [
-        "fastfsc.psm1",
-        "fastfsc.psd1",
+        "pwsl.psm1",
+        "pwsl.psd1",
         "LICENSE",
         "icon.png",
-        "readme.md",
+        "README.md",
         "readme.txt"
     ],
     "modulefolders": [
-        "tools"
+        "cmdlets",
+        "libs"
     ],
     "moduleexclude": [
         "commit-helper.ps1"
