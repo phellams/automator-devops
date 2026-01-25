@@ -51,6 +51,7 @@ else {
 
 $NuSpecParamsChoco = @{
   path              = $module_source_path
+  title             = $ModuleManifest.PrivateData.PSData.ChocoTitle
   ModuleName        = $ModuleName
   ModuleVersion     = $ModuleManifest.Version #-replace "\.\d+$", "" # remove the extra .0 as semver has 0.0.0 and powershell 0.0.0.0
   Author            = $ModuleManifest.Author
