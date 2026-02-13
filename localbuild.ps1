@@ -2,6 +2,7 @@ using module ./scripts/core/core.psm1
 [cmdletbinding()]
 param (
     [switch]$Automator,
+    [switch]$build_dotnet_lib,
     [switch]$Build,
     [switch]$PsGal,
     [switch]$Nuget,
@@ -65,12 +66,13 @@ if ($isLinux -and !$Automator) {
 # docker phellams/automator
 if ($Automator) {
 
-    $docker_image = "docker.io/sgkens/phellams-automator:2.6.1"
+    $docker_image = "docker.io/sgkens/phellams-automator:2.7.1"
 
     $interLogger.invoke("Local-Build", "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
 
     [string]$scripts_to_run = ""
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
+    $build_dotnet_library       = "./automator-devops/scripts/build/build-dotnet8-library.ps1;"
     $build_package_generic_nuget = "./automator-devops/scripts/build/build-package-generic-nuget.ps1;"
     $build_choco_nuspec          = "./automator-devops/scripts/build/build-nuspec-choco.ps1;"
     $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1;"
@@ -79,12 +81,13 @@ if ($Automator) {
     $pester_test_script          = "./automator-devops/scripts/test/test-pester-before-build.ps1;"
     $SafeDirectory               = "git config --global --add safe.directory /$ModuleName"
 
-    if($pester){ $scripts_to_run += $pester_test_script }
-    if($build){ $scripts_to_run += $build_Module }
-    if($psgal){ $scripts_to_run += $build_package_psgallery }
-    if($nuget){ $scripts_to_run += $build_package_generic_nuget }
-    if($Phwriter) { $scripts_to_run += $tools_phwriter_metadata }
-    if($ChocoNuSpec) { $scripts_to_run += $build_choco_nuspec  }
+    if ($pester) { $scripts_to_run += $pester_test_script } # psmodule
+    if ($build) { $scripts_to_run += $build_Module } # psmodule
+    if ($build_dotnet_lib) { $scripts_to_run += $build_dotnet_library } # .net
+    if ($psgal) { $scripts_to_run += $build_package_psgallery } # psmodule
+    if ($nuget) { $scripts_to_run += $build_package_generic_nuget } # psmodule, dotnet
+    if ($Phwriter) { $scripts_to_run += $tools_phwriter_metadata } # psmodule
+    if ($ChocoNuSpec) { $scripts_to_run += $build_choco_nuspec  } # psmodule
     if ($ChocoPackage) { 
         if(!$ChocoNuSpec -or !$build){
             throw [System.Exception]::new("ChocoMonoPackage requires ChocoNuSpec and Build")
@@ -101,6 +104,7 @@ if ($Automator) {
 # =================================
 # BUILD SCRIPTS
 # =================================
+if ($dotnet8_lib) { ./automator-devops/scripts/build/build-dotnet8-library.ps1 }
 if ($pester -and !$automator) { ./automator-devops/scripts/test/test-pester-before-build.ps1 }
 if ($Sa -and !$automator) { ./automator-devops/scripts/test/test-sa-before-build.ps1 }
 if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1 }
