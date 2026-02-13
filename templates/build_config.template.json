@@ -1,32 +1,79 @@
 {
-    "modulename": "fastfsc",
-    "releasetype": "public",
-    "gituser": "sgkens",
-    "gitgroup": "phellams",
-    "gitlabid": "",
-    "gitlabid_public": "72971048",
-    "license": "MIT",
-    "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/dist/png/phellams-logo-128x128.png",
-    "phwriter": true,
-    "phwriter_source": "https://gitlab.com/phellams/fastfsc/-/blob/main/readme.md",
-    "pester_test_files": [
-        ".\\cmdlets\\*.psm1",
-        ".\\*.psm1"
-    ],
-    "modulefiles": [
-        "fastfsc.psm1",
-        "fastfsc.psd1",
-        "LICENSE",
-        "icon.png",
-        "readme.md",
-        "readme.txt"
-    ],
-    "modulefolders": [
-        "cmdlets",
-        "libs",
-        "tools"
-    ],
-    "moduleexclude": [
-        "commit-helper.ps1"
-    ]
+    "PSModeule": {
+        "modulename": "fastfsc",
+        "releasetype": "public",
+        "gituser": "sgkens",
+        "gitgroup": "phellams",
+        "gitlabid": "",
+        "gitlabid_public": "72971048",
+        "license": "MIT",
+        "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/dist/png/phellams-logo-128x128.png",
+        "phwriter": true,
+        "phwriter_source": "https://gitlab.com/phellams/fastfsc/-/blob/main/readme.md",
+        "pester_test_files": [
+            ".\\cmdlets\\*.psm1",
+            ".\\*.psm1"
+        ],
+        "modulefiles": [
+            "fastfsc.psm1",
+            "fastfsc.psd1",
+            "LICENSE",
+            "icon.png",
+            "readme.md",
+            "readme.txt"
+        ],
+        "modulefolders": [
+            "cmdlets",
+            "libs",
+            "tools"
+        ],
+        "moduleexclude": [
+            "commit-helper.ps1"
+        ]
+    },
+    "Dotnet": {
+        "Name": "core.terminal",
+        "Description": "Terminal for .NET Core",
+        "prerelease": "alpha.1",
+        "authors": "Garvey K. Snow",
+        "owners": "Garvey K. Snow",
+        "gitlabid_public": "72971048",
+        "gituser": "sgkens",
+        "gitgroup": "phellams",
+        "releasetype": "public",
+        "license": "MIT",
+        "iconurl": "https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/phellams/dist/png/phellams-logo-128x128.png",
+        "ProjectUrl": "https://github.com/sgkens/core.terminal",
+        "tags": [
+            "terminal",
+            "dotnet",
+            "cli",
+            "console",
+            "powershell"
+        ],
+        "projectUrl": "https://github.com/sgkens/core.terminal",
+
+        "files": [
+            
+        ],
+        "folders": [
+            
+        ],
+        "exclude": [
+            
+        ]
+    },
+    "GemCommander":{
+        "name": "my-utility-gem",
+        "authors": "Dev Team",
+        "email": "dev@example.com",
+        "summary": "A helpful utility gem",
+        "homepage": "https://github.com/example/util",
+        "prerelease": "build.rc1",
+        "license": "MIT",
+        "files": [
+            "lib/util.rb",
+            "README.md"
+        ]
+    }
 }
