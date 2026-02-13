@@ -30,6 +30,7 @@ dotnet build -c Release --no-restore -o "./dist/$Name/lib/$Name/" "./$Name/$Name
 
 $interlogger.invoke("Build", "Successfully built DotNet ", $false, 'info')
 
+$interLogger.invoke("Build", "Copying Dist Build Files to {kv:Folder=dist/$Name}", $false, 'info')
 # Copy Dist Build Files
 foreach ($folder in $libraryConfig.Folders) {
     if (!(Test-Path -Path $folder -ErrorAction SilentlyContinue)){
@@ -43,6 +44,9 @@ foreach ($folder in $libraryConfig.Folders) {
     }
 }
 
+$interLogger.invoke("Build", "Successfully copied Folders to {kv:Folder=dist/$Name}", $false, 'info')
+
+$interLogger.invoke("Build", "Copying Dist Build Files to {kv:Folder=dist/$Name}", $false, 'info')
 foreach ($file in $libraryConfig.Files) {
     if (!(Test-Path -Path $file -ErrorAction SilentlyContinue)){
         $interlogger.invoke("Build", "File $file not found", $false, 'error')
@@ -53,4 +57,9 @@ foreach ($file in $libraryConfig.Files) {
     Copy-Item -Path "./$Name/$file" -Destination "./dist/$Name/$file" -Force
 }
 
-#
+$interLogger.invoke("Build", "Successfully copied files to {kv:Folder=dist/$Name}", $false, 'info')
+
+# Complete
+
+$interLogger.invoke("Complete", "Successfully completed Build on DotNet {kv:Library=$Name} {kv:Version=$package_version}", $false, 'info')
+
