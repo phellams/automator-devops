@@ -1,5 +1,5 @@
 #---CONFIG----------------------------
-$ModuleConfig            = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig            = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $ModuleName              = $ModuleConfig.moduleName
 $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()

@@ -6,7 +6,7 @@ $interLogger = $global:__automator_devops.interLogger
 #---UI ELEMENTS Shortened-------------
 
 #---CONFIG----------------------------
-$ModuleConfig = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $modulename = $ModuleConfig.moduleName
 #---CONFIG----------------------------
 

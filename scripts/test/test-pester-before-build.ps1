@@ -7,7 +7,7 @@ $interLogger = $global:__automator_devops.interLogger
 #---UI ELEMENTS Shortened-------------
 
 #---CONFIG----------------------------
-$ModuleConfig = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $ModuleName = $ModuleConfig.moduleName
 $pester_test_files =  $ModuleConfig.pester_test_files
 #---CONFIG----------------------------

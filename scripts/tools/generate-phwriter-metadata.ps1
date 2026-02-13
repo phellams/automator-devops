@@ -2,7 +2,7 @@ using module ..\core\core.psm1
 # PHWriter Metadata Generator
 
 #---CONFIG----------------------------
-$ModuleConfig           = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig           = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $modulename             = $ModuleConfig.modulename
 $ModuleManifest         = Test-ModuleManifest -path "./$moduleName.psd1"
 [string]$moduleversion  = $ModuleManifest.Version.ToString()

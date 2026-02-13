@@ -6,7 +6,7 @@ $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 
 #---CONFIG----------------------------
-$ModuleConfig   = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig   = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $ModuleName     = $ModuleConfig.moduleName
 $gituser        = $ModuleConfig.gituser
 $gitgroup       = $ModuleConfig.gitgroup

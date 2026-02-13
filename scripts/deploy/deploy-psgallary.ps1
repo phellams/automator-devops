@@ -6,7 +6,7 @@ $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 
 #---CONFIG----------------------------
-$ModuleConfig   = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig   = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $modulename     = $ModuleConfig.modulename
 $ModuleManifest = Test-ModuleManifest -path "./dist/$moduleName/$moduleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
