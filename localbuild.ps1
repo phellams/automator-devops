@@ -1,5 +1,7 @@
 using module ./scripts/core/core.psm1
+
 [cmdletbinding()]
+
 param (
     [switch]$Automator,
     [switch]$build_dotnet_lib,
@@ -17,14 +19,13 @@ param (
 # Import Module config
 
 #---CONFIG----------------------------
-$ModuleConfig = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
 $ModuleName = $ModuleConfig.moduleName
-$moduleVersion = $ModuleConfig.moduleVersion
 #---CONFIG----------------------------
 
 #---UI ELEMENTS Shortened-------------
 $interLogger = $global:__automator_devops.interLogger
-$kv = $global:__automator_devops.kvinc
+# $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 
 $interLogger.invoke("Local-Build", "Running Build on {kv:module=$ModuleName} ", $false, 'info')
@@ -72,7 +73,7 @@ if ($Automator) {
 
     [string]$scripts_to_run = ""
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
-    $build_dotnet_library       = "./automator-devops/scripts/build/build-dotnet8-library.ps1;"
+    $build_dotnet_library       = "./automator-devops/scripts/build/build-dotnet-library.ps1;"
     $build_package_generic_nuget = "./automator-devops/scripts/build/build-package-generic-nuget.ps1;"
     $build_choco_nuspec          = "./automator-devops/scripts/build/build-nuspec-choco.ps1;"
     $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1;"
@@ -104,7 +105,7 @@ if ($Automator) {
 # =================================
 # BUILD SCRIPTS
 # =================================
-if ($dotnet8_lib) { ./automator-devops/scripts/build/build-dotnet8-library.ps1 }
+if ($dotnet8_lib) { ./automator-devops/scripts/build/build-dotnet-library.ps1 }
 if ($pester -and !$automator) { ./automator-devops/scripts/test/test-pester-before-build.ps1 }
 if ($Sa -and !$automator) { ./automator-devops/scripts/test/test-sa-before-build.ps1 }
 if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1 }
