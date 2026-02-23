@@ -141,3 +141,33 @@ if ($zipFile) {
     }
     exit 1
 }
+
+# upload dotnet package
+$interLogger.invoke("deploy", "Finding .NET package: $ModuleName.$moduleversion.nupkg to upload...", $false, 'info')
+$dotnetFile = Get-ChildItem -Recurse './dist/dotnet' -Filter "$ModuleName*.nupkg" | 
+    Where-Object { $_.Name -like "$ModuleName.$moduleversion.nupkg" } | 
+    Select-Object -First 1
+
+if ($dotnetFile) {
+    $dotnetFile | Select-Object Name, FullName
+    $interLogger.invoke("deploy", "Uploading .NET package: $($dotnetFile.FullName)", $false, 'info')
+    try {
+        Invoke-RestMethod -Uri "$baseUrl/$($dotnetFile.Name)" -Method Put -InFile $dotnetFile.FullName -Headers $headers
+        $interLogger.invoke("deploy", "Uploaded: $($dotnetFile.Name)", $false, 'info')
+    }
+    catch {
+        $interLogger.invoke("deploy", "Upload failed: $($_.Exception.Message)", $false, 'error')
+        exit 1
+    }
+} else {
+    $interLogger.invoke("deploy", "No .NET package found to upload.", $false, 'info')
+    # List what files are actually there for debugging
+    $allDotnetFiles = Get-ChildItem -Recurse './dist/dotnet' -Filter "*.nupkg" -ErrorAction SilentlyContinue
+    if ($allDotnetFiles) {
+        $interLogger.invoke("deploy", "Available .NET files:", $false, 'info')
+        $allDotnetFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
+    } else {
+        $interLogger.invoke("deploy", "No .nupkg files found in ./dist/dotnet/", $false, 'error')
+    }
+    exit 1
+}
