@@ -3,7 +3,7 @@
 
 
 default:
-  image: docker.io/sgkens/phellams-automator:2.6.1
+  image: docker.io/sgkens/phellams-automator:2.7.5
   tags:
     - docker
   artifacts:
