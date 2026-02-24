@@ -92,13 +92,13 @@ try {
 
 # Some additional checks before sending to build
 # check if requirement tootls/LICENSE.txt exists
-if (!(Test-Path -path "./dist/choco/tools/LICENSE.txt")) {
+if (!(Test-Path -path "./dist/$modulename/tools/LICENSE.txt")) {
   throw [System.Exception]::new("ChocoMonoPackage requires tools/LICENSE.txt")
   exit 1 # fail pipeline if license file is not found as this is required for package verification and security
 }
 
 # check if requirement tools/VERIFICATION.txt exists
-if (!(Test-Path -path "./dist/choco/tools/VERIFICATION.txt")) {
+if (!(Test-Path -path "./dist/$modulename/tools/VERIFICATION.txt")) {
   throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
   exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
 }

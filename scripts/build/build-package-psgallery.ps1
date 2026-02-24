@@ -74,7 +74,7 @@ try{
 
 $interLogger.invoke($logname, "Created Zip File for PSGallery", $false, 'info')
 # check if requirement tools/VERIFICATION.txt exists
-if (!(Test-Path -path "./dist/choco/tools/VERIFICATION.txt")) {
+if (!(Test-Path -path "./dist/$modulename/tools/VERIFICATION.txt")) {
   throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
   exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
 }
