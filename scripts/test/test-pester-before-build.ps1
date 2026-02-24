@@ -4,6 +4,7 @@ using module ../core/core.psm1
 
 #---UI ELEMENTS Shortened-------------
 $interLogger = $global:__automator_devops.interLogger
+$logname = "test-stage-Pester"
 #---UI ELEMENTS Shortened-------------
 
 #---CONFIG----------------------------
@@ -15,7 +16,7 @@ $pester_test_files =  $ModuleConfig.pester_test_files
 # Pester Configration settings
 # Invoke-Pester -CodeCoverage .\libs\*.psm1 -CodeCoverageOutputFile 'Coverage.xml' -CodeCoverageOutputFileFormat JaCoCo -script .\BT0-CI-Test-Pester.ps1 -PassThru
 
-$interLogger.invoke("Pester", "Running Pester on {inf:kv:path=./dist/$modulename} ", $false, 'info')
+$interLogger.invoke($logname, "Running Pester on {inf:kv:path=./dist/$modulename} ", $false, 'info')
 
 $pesterConfig = New-PesterConfiguration -hashtable @{
   CodeCoverage = @{ 

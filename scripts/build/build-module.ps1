@@ -14,15 +14,16 @@ $ModuleConfig            = (Get-Content -Path ./build_config.json | ConvertFrom-
 [string[]]$ModuleExclude = $ModuleConfig.ModuleExclude
 $source                  = $ModuleConfig.phwriter_source
 $phwriter                = $ModuleConfig.phwriter
+$logname                 = "build-stage"
 #---CONFIG----------------------------
 
 $AutoVersion = (Get-GitAutoVersion).Version
 
-$interLogger.invoke("Build", "Running Build on {kv:module=$ModuleName} ", $false, 'info')
-$interLogger.invoke("Build", "Creating dist folders", $false, 'info')
+$interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
+$interLogger.invoke($logname, "Creating dist folders", $false, 'info')
 
 if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {                                                                         
-    $interlogger.invoke("Build", "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
+    $interlogger.invoke($logname, "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
 
     # ps1 script to generate phwriter metadata for cmdlets
     # exports will be stored in json, phwriter cant load help data from json Using
@@ -60,7 +61,7 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
     }
 
 } else {
-    $interLogger.invoke("Build", "PHWriter metadata file not found at {kv:path=./phwriter-metadata.ps1}", $false, 'warning')
+    $interLogger.invoke($logname, "PHWriter metadata file not found at {kv:path=./phwriter-metadata.ps1}", $false, 'warning')
 }
 
 # Create dist folder
@@ -78,7 +79,7 @@ if (!(Test-Path -Path "./dist/$moduleName/tools")) {
     New-Item -Path "./dist/$moduleName/tools" -ItemType Directory 
 }
 
-$interLogger.invoke("Build", "Copying files to dist {inf:kv:BuildSource=PSMPacker}", $false, 'info')
+$interLogger.invoke($logname, "Copying files to dist {inf:kv:BuildSource=PSMPacker}", $false, 'info')
 
 # Copy module files to dist for packaging
 Build-Module -SourcePath ./ `
@@ -95,16 +96,16 @@ Build-Module -SourcePath ./ `
 #!FIX: rename README.md to readme.md as nuget is case sensitive
 if (Test-Path -Path "./dist/$ModuleName/README.md") {
     Rename-Item -Path "./dist/$ModuleName/README.md" -NewName "readme.md" -Force
-    $interLogger.invoke("Build", "Renamed README.md to readme.md for nuget compliance", $false, 'info')
+    $interLogger.invoke($logname, "Renamed README.md to readme.md for nuget compliance", $false, 'info')
 }
 
 # Create ENV as Choco image does not support powershell execution
 # Set the choco package name as a ENV and use choco push
 # Name will be pulled by the gitlab ci script and use to rename the choco package after choco pack
 if((Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1")) {
-    $interLogger.invoke("Build", "Module manifest found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'info') 
+    $interLogger.invoke($logname, "Module manifest found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'info') 
 } else {
-    $interLogger.invoke("Build", "Module manifest not found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'error')
+    $interLogger.invoke($logname, "Module manifest not found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'error')
     exit 1
 
 }
@@ -115,8 +116,8 @@ $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$Module
 if (!$prerelease -or $prerelease.Length -eq 0) { $moduleversion = $moduleversion }
 else { $moduleversion = "$moduleversion-$prerelease" }
 
-$interLogger.invoke("Build", "Module version is {kv:version=$moduleversion}", $false, 'info')
-$interLogger.invoke("Build", "Generating build env {kv:path=./build.env}", $false, 'info')
+$interLogger.invoke($logname, "Module version is {kv:version=$moduleversion}", $false, 'info')
+$interLogger.invoke($logname, "Generating build env {kv:path=./build.env}", $false, 'info')
 
 New-Item -Type File -Path "build.env" -Force -Value $null
 
@@ -140,13 +141,13 @@ Set-Content -Path "build.env" -Value $BuildEnvContent -Force -Encoding UTF8
 # NOTE: This is a note
 
 # Run CsVerify generate Verifications.txt for choco and for package verification.
-$interLogger.invoke("Build", "Running CsVerify to generate verification files", $false, 'info')
+$interLogger.invoke($logname, "Running CsVerify to generate verification files", $false, 'info')
 
 New-VerificationFile -RootPath "./dist/$ModuleName" -OutputPath "./dist/$ModuleName/tools"
 
-$interLogger.invoke("Build", "CsVerify generated verification files", $false, 'info')
+$interLogger.invoke($logname, "CsVerify generated verification files", $false, 'info')
 
 # Test Verifications.txt
-$interLogger.invoke("Build", "Testing verification files", $false, 'info')
+$interLogger.invoke($logname, "Testing verification files", $false, 'info')
 Test-Verification -Path "./dist/$ModuleName"
-$interLogger.invoke("Build", "Verification files tested", $false, 'info')
+$interLogger.invoke($logname, "Verification files tested", $false, 'info')

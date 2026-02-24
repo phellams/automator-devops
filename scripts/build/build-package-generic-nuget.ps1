@@ -5,7 +5,7 @@ $interLogger = $global:__automator_devops.interLogger
 $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 
-$interLogger.invoke("Build", "Running build on nuspec for nuget {inf:kv:buildMethod=NUPSFORGE}", $false, 'info')
+$interLogger.invoke($logname, "Running build on nuspec for nuget {inf:kv:buildMethod=NUPSFORGE}", $false, 'info')
 
 #---CONFIG----------------------------
 $ModuleConfig   = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
@@ -13,6 +13,7 @@ $ModuleName     = $ModuleConfig.moduleName
 $ModuleManifest = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $PreRelease     = $ModuleManifest.PrivateData.PSData.Prerelease
+$logname        = "build-stage"
 #---CONFIG----------------------------
 
 # Set PreRelease
@@ -50,3 +51,5 @@ $module_output_path = [system.io.path]::combine($pwd, "dist", "nuget")
 
 New-NuspecPackageFile @NuSpecParams
 New-NupkgPackage -Path $module_source_path -OutPath $module_output_path -CI
+
+$interLogger.invoke($logname, "Successfully created NuGet package for {kv:module=$ModuleName} version {kv:version=$ModuleVersion}", $false, 'info')

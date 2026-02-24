@@ -4,6 +4,7 @@ $ModuleName              = $ModuleConfig.moduleName
 $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $PreRelease              = $ModuleManifest.PrivateData.PSData.Prerelease
+$logname                 = $global:__automator_devops.logname
 #---CONFIG----------------------------
 
 # Set PreRelease

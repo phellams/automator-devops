@@ -11,9 +11,10 @@ $ModuleName              = $ModuleConfig.moduleName
 $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 [string]$PreRelease      = $ModuleManifest.PrivateData.PSData.Prerelease
+$logname                 = "build-stage"
 #---CONFIG----------------------------
 
-$interLogger.invoke("Build", "Running build on nuspec for choco", $false, 'info')
+$interLogger.invoke($logname, "Running build on nuspec for choco", $false, 'info')
 
 # Set PreRelease
 if (!$prerelease -or $prerelease.Length -eq 0) { $ModuleVersion = $ModuleVersion }
@@ -73,24 +74,31 @@ $NuSpecParamsChoco = @{
 }
 
 try {
-  # Create New Verification CheckSums Request root module directory
-  # Set-Location "./dist/$ModuleName"
-  # New-VerificationFile -RootPath ./ -OutputPath ./tools | Format-Table -auto
-  # Test-Verification -Path ./ | Format-Table -auto
-  # Set-Location ../../ # back
-  # Create Choco nuspec
 
-  $interLogger.invoke("Build", "Creating choco nuspec", $false, 'info')
+  $interLogger.invoke($logname, "Creating choco nuspec", $false, 'info')
 
   New-ChocoNuspecFile @NuSpecParamsChoco
 
   # Use Choco mono to create choco package and deploy
   if($IsWindows){
-    $interLogger.invoke("Build", "Creating choco package {wrn:kv:Platform=Windows}", $false, 'info')
+    $interLogger.invoke($logname, "Creating choco package {wrn:kv:Platform=Windows}", $false, 'info')
     New-ChocoPackage -path ".\dist\$ModuleName"  -outpath ".\dist\choco"
   }
 
 } catch {
   [console]::write( "Error creating Choco package: $($_.Exception.Message)`n" )
   exit 1
+}
+
+# Some additional checks before sending to build
+# check if requirement tootls/LICENSE.txt exists
+if (!(Test-Path -path "./dist/choco/tools/LICENSE.txt")) {
+  throw [System.Exception]::new("ChocoMonoPackage requires tools/LICENSE.txt")
+  exit 1 # fail pipeline if license file is not found as this is required for package verification and security
+}
+
+# check if requirement tools/VERIFICATION.txt exists
+if (!(Test-Path -path "./dist/choco/tools/VERIFICATION.txt")) {
+  throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
+  exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
 }

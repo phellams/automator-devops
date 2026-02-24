@@ -11,6 +11,7 @@ $ModuleName              = $ModuleConfig.moduleName
 $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $PreRelease              = $ModuleManifest.PrivateData.PSData.Prerelease
+$logname                 = "deploy-stage-artifacts"
 #---CONFIG----------------------------
 
 if (!$prerelease -or $prerelease.Length -eq 0) { 
@@ -35,7 +36,7 @@ $CommitTag = if ($env:CI_COMMIT_TAG) { $env:CI_COMMIT_TAG } else { $env:CI_COMMI
 # FIX: try with "$modulename/$moduleversion/$ModuleName-$moduleversion.nupkg" name
 $baseUrl = "$env:CI_API_V4_URL/projects/$env:CI_PROJECT_ID/packages/generic/$modulename/$moduleversion"
 
-$interLogger.invoke("deploy", "Uploading artifacts to {kv:url=$baseUrl}", $false, 'info')
+$interLogger.invoke($logname, "Uploading artifacts to {kv:url=$baseUrl}", $false, 'info')
 
 [console]::writeline("==== ENVIRONMENT VARIABLES DEBUG ====")
 $kv.invoke("CI_API_V4_URL", "$env:CI_API_V4_URL")
@@ -53,121 +54,121 @@ $kv.invoke("BASE URL", "$baseUrl")
 $file_hashes = @()
 
 # Upload NuGet package
-$interLogger.invoke("deploy", "Finding NuGet package: $ModuleName-$moduleversion.nupkg to upload...", $false, 'info')
+$interLogger.invoke($logname, "Finding NuGet package: $ModuleName-$moduleversion.nupkg to upload...", $false, 'info')
 $nugetFile = Get-ChildItem -Recurse './dist/nuget' -Filter "$ModuleName*.nupkg" | 
     Where-Object { $_.Name -like "$ModuleName*$moduleversion*.nupkg" } | 
     Select-Object -First 1
 
 if ($nugetFile) {
     $nugetFile | Select-Object Name, FullName
-    $interLogger.invoke("deploy", "Uploading NuGet package: $($nugetFile.FullName)", $false, 'info')    
+    $interLogger.invoke($logname, "Uploading NuGet package: $($nugetFile.FullName)", $false, 'info')    
     try {
         $response = Invoke-RestMethod -Uri "$baseUrl/$($nugetFile.Name)" -Method Put -InFile $nugetFile.FullName -Headers $headers
-        $interLogger.invoke("deploy", "{kv:StatusCode=$response.StatusCode} On file upload {kv:File=$($nugetFile.Name)}", $false, 'info')
+        $interLogger.invoke($logname, "{kv:StatusCode=$response.StatusCode} On file upload {kv:File=$($nugetFile.Name)}", $false, 'info')
     }
     catch {
-        $interLogger.invoke("deploy", "Upload failed: $($_.Exception.Message)", $false, 'error')
+        $interLogger.invoke($logname, "Upload failed: $($_.Exception.Message)", $false, 'error')
         exit 1
     }
 } else {
-    $interLogger.invoke("deploy", "No NuGet package found to upload.", $false, 'info')
+    $interLogger.invoke($logname, "No NuGet package found to upload.", $false, 'info')
     # List what files are actually there for debugging
     $allNugetFiles = Get-ChildItem -Recurse './dist/nuget' -Filter "*.nupkg" -ErrorAction SilentlyContinue
     if ($allNugetFiles) {
-        $interLogger.invoke("deploy", "Available NuGet files:", $false, 'info')
+        $interLogger.invoke($logname, "Available NuGet files:", $false, 'info')
         $allNugetFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
     } else {
-        $interLogger.invoke("deploy", "No .nupkg files found in ./dist/nuget/", $false, 'error')
+        $interLogger.invoke($logname, "No .nupkg files found in ./dist/nuget/", $false, 'error')
     }
     exit 1
 }
 
 # Upload Chocolatey package
-$interLogger.invoke("deploy", "Finding Chocolatey package: $ModuleName-$moduleversion-choco.nupkg to upload...", $false, 'info')
+$interLogger.invoke($logname, "Finding Chocolatey package: $ModuleName-$moduleversion-choco.nupkg to upload...", $false, 'info')
 $chocoFile = Get-ChildItem -Recurse './dist/choco' -Filter "$ModuleName*.nupkg" | 
     Where-Object { $_.Name -like "$ModuleName*$moduleversion*choco*.nupkg" } | 
     Select-Object -First 1
 
 if ($chocoFile) {
     $chocoFile | Select-Object Name, FullName
-    $interLogger.invoke("deploy", "Uploading Chocolatey package: $($chocoFile.FullName)", $false, 'info')
+    $interLogger.invoke($logname, "Uploading Chocolatey package: $($chocoFile.FullName)", $false, 'info')
     try {
         Invoke-RestMethod -Uri "$baseUrl/$($chocoFile.Name)" -Method Put -InFile $chocoFile.FullName -Headers $headers
-        $interLogger.invoke("deploy", "Uploaded: $($chocoFile.Name)", $false, 'info')
+        $interLogger.invoke($logname, "Uploaded: $($chocoFile.Name)", $false, 'info')
     }
     catch {
-        $interLogger.invoke("deploy", "Upload failed: $($_.Exception.Message)", $false, 'error')
+        $interLogger.invoke($logname, "Upload failed: $($_.Exception.Message)", $false, 'error')
         exit 1
     }
 } else {
-    $interLogger.invoke("deploy", "No Chocolatey package found to upload.", $false, 'info')
+    $interLogger.invoke($logname, "No Chocolatey package found to upload.", $false, 'info')
     # List what files are actually there for debugging
     $allChocoFiles = Get-ChildItem -Recurse './dist/choco' -Filter "*.nupkg" -ErrorAction SilentlyContinue
     if ($allChocoFiles) {
-        $interLogger.invoke("deploy", "Available Chocolatey files:", $false, 'info')
+        $interLogger.invoke($logname, "Available Chocolatey files:", $false, 'info')
         $allChocoFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
     } else {
-        $interLogger.invoke("deploy", "No .nupkg files found in ./dist/choco/", $false, 'error')
+        $interLogger.invoke($logname, "No .nupkg files found in ./dist/choco/", $false, 'error')
     }
     exit 1
 }
 
 # Upload ZIP file
-$interLogger.invoke("deploy", "Finding ZIP file: $ModuleName-$moduleversion-psgal.zip to upload...", $false, 'info')
+$interLogger.invoke($logname, "Finding ZIP file: $ModuleName-$moduleversion-psgal.zip to upload...", $false, 'info')
 $zipFile = Get-ChildItem -Recurse './dist/psgal' -Filter "$ModuleName*.zip" | 
     Where-Object { $_.Name -like "$ModuleName*$moduleversion*psgal*.zip" } | 
     Select-Object -First 1
 
 if ($zipFile) {
     $zipFile | Select-Object Name, FullName
-    $interLogger.invoke("deploy", "Uploading ZIP file: $($zipFile.FullName)", $false, 'info')
+    $interLogger.invoke($logname, "Uploading ZIP file: $($zipFile.FullName)", $false, 'info')
     try {
         Invoke-RestMethod -Uri "$baseUrl/$($zipFile.Name)" -Method Put -InFile $zipFile.FullName -Headers $headers
-        $interLogger.invoke("deploy", "Uploaded: $($zipFile.Name)", $false, 'info')
+        $interLogger.invoke($logname, "Uploaded: $($zipFile.Name)", $false, 'info')
     }
     catch {
-        $interLogger.invoke("deploy", "ZIP upload failed: $($_.Exception.Message)", $false, 'error')
+        $interLogger.invoke($logname, "ZIP upload failed: $($_.Exception.Message)", $false, 'error')
         exit 1
     }
 } else {
-    $interLogger.invoke("deploy", "No ZIP file found to upload.", $false, 'info')
+    $interLogger.invoke($logname, "No ZIP file found to upload.", $false, 'info')
     # List what files are actually there for debugging
     $allZipFiles = Get-ChildItem -Recurse './dist/psgal' -Filter "*.zip" -ErrorAction SilentlyContinue
     if ($allZipFiles) {
-        $interLogger.invoke("deploy", "Available ZIP files:", $false, 'info')
+        $interLogger.invoke($logname, "Available ZIP files:", $false, 'info')
         $allZipFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
     } else {
-        $interLogger.invoke("deploy", "No .zip files found in ./dist/psgal/", $false, 'error')
+        $interLogger.invoke($logname, "No .zip files found in ./dist/psgal/", $false, 'error')
     }
     exit 1
 }
 
 # upload dotnet package
-$interLogger.invoke("deploy", "Finding .NET package: $ModuleName.$moduleversion.nupkg to upload...", $false, 'info')
+$interLogger.invoke($logname, "Finding .NET package: $ModuleName.$moduleversion.nupkg to upload...", $false, 'info')
 $dotnetFile = Get-ChildItem -Recurse './dist/dotnet' -Filter "$ModuleName*.nupkg" | 
     Where-Object { $_.Name -like "$ModuleName.$moduleversion.nupkg" } | 
     Select-Object -First 1
 
 if ($dotnetFile) {
     $dotnetFile | Select-Object Name, FullName
-    $interLogger.invoke("deploy", "Uploading .NET package: $($dotnetFile.FullName)", $false, 'info')
+    $interLogger.invoke($logname, "Uploading .NET package: $($dotnetFile.FullName)", $false, 'info')
     try {
         Invoke-RestMethod -Uri "$baseUrl/$($dotnetFile.Name)" -Method Put -InFile $dotnetFile.FullName -Headers $headers
-        $interLogger.invoke("deploy", "Uploaded: $($dotnetFile.Name)", $false, 'info')
+        $interLogger.invoke($logname, "Uploaded: $($dotnetFile.Name)", $false, 'info')
     }
     catch {
-        $interLogger.invoke("deploy", "Upload failed: $($_.Exception.Message)", $false, 'error')
+        $interLogger.invoke($logname, "Upload failed: $($_.Exception.Message)", $false, 'error')
         exit 1
     }
 } else {
-    $interLogger.invoke("deploy", "No .NET package found to upload.", $false, 'info')
+    $interLogger.invoke($logname, "No .NET package found to upload.", $false, 'info')
     # List what files are actually there for debugging
     $allDotnetFiles = Get-ChildItem -Recurse './dist/dotnet' -Filter "*.nupkg" -ErrorAction SilentlyContinue
     if ($allDotnetFiles) {
-        $interLogger.invoke("deploy", "Available .NET files:", $false, 'info')
+        $interLogger.invoke($logname, "Available .NET files:", $false, 'info')
         $allDotnetFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
     } else {
-        $interLogger.invoke("deploy", "No .nupkg files found in ./dist/dotnet/", $false, 'error')
+        $interLogger.invoke($logname, "No .nupkg files found in ./dist/dotnet/", $false, 'error')
     }
     exit 1
 }

@@ -8,6 +8,7 @@ $ModuleManifest         = Test-ModuleManifest -path "./$moduleName.psd1"
 [string]$moduleversion  = $ModuleManifest.Version.ToString()
 $prerelease             = $ModuleManifest.PrivateData.PSData.Prerelease
 $source                 = $ModuleConfig.phwriter_source
+$logname                = "extract-metadata-stage-phwriter"
 #---CONFIG----------------------------
 
 # Set PreRelease
@@ -18,7 +19,7 @@ else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 $interlogger = $global:__automator_devops.interLogger
 # ==== GLOBAL VARIABLES ====
 
-$interlogger.invoke("Tools", "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
+$interlogger.invoke($logname, "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
 
 # ps1 script to generate phwriter metadata for cmdlets
 # exports will be stored in json, phwriter cant load help data from json Using

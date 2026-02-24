@@ -18,6 +18,8 @@ using module ../core/New-ColorConsole.psm1
  * --- interLogger  
 <# . . . . . . . . . . . . . .#>
 $global:__automator_devops = @{
+
+    logname = 'AUTOMATOR-BUILDER'
     
     # Enable global logging
     # Set via Set-Logging Cmdlets with -Enable or -Disable parameters

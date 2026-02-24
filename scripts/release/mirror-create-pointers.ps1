@@ -12,6 +12,7 @@ $gituser        = $ModuleConfig.gituser
 $gitgroup       = $ModuleConfig.gitgroup
 #$gitlab_mirror_name = "gitlab_mirror"
 $github_mirror_name = "github_mirror"
+$logname = "release-stage"
 #---CONFIG----------------------------
 
 try {
@@ -30,17 +31,17 @@ try {
     $repo_string = "https://$gituser`:$ENV:GITHUB_API_KEY@github.com/$gitgroup/$ModuleName.git"
     git remote add $github_mirror_name $repo_string
     git remote set-url --push $github_mirror_name $repo_string
-    $interLogger.invoke("release", "Adding Github Mirror: {kv:url=$repo_string}", $false, 'info')
+    $interLogger.invoke($logname, "Adding Github Mirror: {kv:url=$repo_string}", $false, 'info')
     git push $github_mirror_name --all
     if($LASTEXITCODE -eq 0) {
-        $interLogger.invoke("release", "Successfully added Github Mirror: {kv:url=$repo_string}", $false, 'info')
+        $interLogger.invoke($logname, "Successfully added Github Mirror: {kv:url=$repo_string}", $false, 'info')
     }else {
-        $interLogger.invoke("release", "Failed to add Github Mirror Exit Code:{kv:code=$LASTEXITCODE}, {kv:url=$repo_string}", $false, 'error')
+        $interLogger.invoke($logname, "Failed to add Github Mirror Exit Code:{kv:code=$LASTEXITCODE}, {kv:url=$repo_string}", $false, 'error')
         exit 1
     }
 
 } catch [system.exception] {
-    $interLogger.invoke("release", "Failed to create local mirror: {kv:error=$($_.exception.message)}", $false, 'error')    
+    $interLogger.invoke($logname, "Failed to create local mirror: {kv:error=$($_.exception.message)}", $false, 'error')    
 }
 
 # Remove local Mirrors

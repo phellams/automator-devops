@@ -4,6 +4,7 @@ using module ../core/core.psm1
 #---UI ELEMENTS Shortened-------------
 $interLogger = $global:__automator_devops.interLogger
 $kv = $global:__automator_devops.kvinc
+$logname = "release-stage"
 #---UI ELEMENTS Shortened------------
 
 #---CONFIG----------------------------
@@ -19,31 +20,31 @@ $coverageReportFilePath = "./coverage.xml"
 #---CONFIG----------------------------
 
 #------------------------------------
-$interLogger.invoke("release", "Starting Coveralls Coverage Report Upload for {kv:module=$ModuleName}", $false, 'info')
+$interLogger.invoke($logname, "Starting Coveralls Coverage Report Upload for {kv:module=$ModuleName}", $false, 'info')
 # 1. Verify Coveralls executable exists in PATH
 # Get-Command is more robust for checking if an executable is truly available.
 # Using -ErrorAction Stop ensures immediate termination on failure.
 try {
     $coverallsCommand = Get-Command $coveralls -ErrorAction Stop
-    $interLogger.invoke("release", "Found Coveralls executable: {kv:path=$($coverallsCommand.Source)}", $false, 'info')
+    $interLogger.invoke($logname, "Found Coveralls executable: {kv:path=$($coverallsCommand.Source)}", $false, 'info')
 }
 catch {
-    $interLogger.invoke("release", "Unable to find Coveralls executable: {kv:name=$coveralls}. Please ensure it's installed and accessible.", $false, 'error')
+    $interLogger.invoke($logname, "Unable to find Coveralls executable: {kv:name=$coveralls}. Please ensure it's installed and accessible.", $false, 'error')
     exit 1
 }
 
 # 2. Verify the coverage report file exists
 if (!(Test-Path $coverageReportFilePath)) {
-    $interLogger.invoke("release", "Coverage report file not found at {kv:path=$coverageReportFilePath}. Please ensure your test runner generated it correctly.", $false, 'error')
+    $interLogger.invoke($logname, "Coverage report file not found at {kv:path=$coverageReportFilePath}. Please ensure your test runner generated it correctly.", $false, 'error')
     exit 1 
 }
 
-$interLogger.invoke("release", "Found coverage report file: {kv:path=$coverageReportFilePath}", $false, 'info')
+$interLogger.invoke($logname, "Found coverage report file: {kv:path=$coverageReportFilePath}", $false, 'info')
 # 3. Verify the repository token environment variable is set
 if ([string]::IsNullOrWhiteSpace("$env:coveralls_token")) {
     throw [System.Exception]::new("Coveralls repository token environment variable 'coveralls_repo_token_$Modulename' is not set. Please set it in your CI/CD environment.")
 }
-$interLogger.invoke("release", "Coveralls repository token environment variable found.", $false, 'info')
+$interLogger.invoke($logname, "Coveralls repository token environment variable found.", $false, 'info')
 # 4. Execute the Coveralls report command
 
 [console]::writeline("Executing Coveralls upload command...")

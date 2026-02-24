@@ -18,6 +18,7 @@ $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
 $ModuleVersion  = $ModuleManifest.Version.ToString()
 # add v prefix if not exists
 $tagVersion = "v" + $ModuleVersion
+$logname = "release-stage"
 #---CONFIG----------------------------
 
 # Parse release body
@@ -49,11 +50,11 @@ else {
 
 
 if (Test-GitLabReleaseVersion -reponame "$gitgroup/$modulename" -version $ModuleVersion) {
-  $interLogger.invoke("release", "Release {kv:version=$ModuleVersion} already exists for {kv:module=$gitgroup/$modulename}. Skipping release creation.", $false, 'info')
+  $interLogger.invoke($logname, "Release {kv:version=$ModuleVersion} already exists for {kv:module=$gitgroup/$modulename}. Skipping release creation.", $false, 'info')
   exit 0
 }
 else {
-  $interLogger.invoke("release", "Release {kv:version=$ModuleVersion} does not exist for {kv:module=$gitgroup/$modulename}. Proceeding to create release.", $false, 'info')
+  $interLogger.invoke($logname, "Release {kv:version=$ModuleVersion} does not exist for {kv:module=$gitgroup/$modulename}. Proceeding to create release.", $false, 'info')
 }
 
 # $generic_packages = Request-GenericPackage -ProjectId $ENV:CI_PROJECT_ID -PackageName $modulename -ApiKey $ENV:GITLAB_API_KEY -PackageVersion $ModuleVersion
@@ -77,7 +78,7 @@ $nuget_generic_package = $generic_package | Where-Object {$_.file_name -match "$
 $choco_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-choco.nupkg"} | Sort-Object created_at | Select-Object -First 1   
 $psgal_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-psgal.zip"} | Sort-Object created_at | Select-Object -First 1                      
 
-$interLogger.invoke("release", "DEBUG INFO: GENERIC PACKAGE", $false, 'info')
+$interLogger.invoke($logname, "DEBUG INFO: GENERIC PACKAGE", $false, 'info')
 [console]::writeline("====================================")
 $kv.invoke("NUGET NUPKG URL", "$($nuget_generic_package.download_url)")
 $kv.invoke("CHOCO NUPKG URL", "$($choco_generic_package.download_url)")
@@ -97,10 +98,10 @@ $psgal_generic_package
 $release_notes = Get-releaseNotes -NameSpace phellams -FeatureNotes -BreakingChanges -FeatureAdditions -Notes -FeatureUpdates -CommitLink -CommitLinkPrefix gitlab -AheadOnly
 
 if ($release_notes.Length -eq 0) {
-    $interLogger.invoke("release", "No release notes generated for {kv:module=$gitgroup/$modulename}", $false, 'info')
+    $interLogger.invoke($logname, "No release notes generated for {kv:module=$gitgroup/$modulename}", $false, 'info')
     $release_notes = "No release notes available."
 } else {
-    $interLogger.invoke("release", "Generated release notes for {kv:module=$gitgroup/$modulename}", $false, 'info')
+    $interLogger.invoke($logname, "Generated release notes for {kv:module=$gitgroup/$modulename}", $false, 'info')
 }
 
 
@@ -119,7 +120,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256 `
                                       -replace 'RELEASE_NOTES', $release_notes
 
-$interLogger.invoke("release", "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
+$interLogger.invoke($logname, "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
 
 $assets = @{
   links = @(
@@ -148,24 +149,24 @@ $body = @{
     assets      = $assets
 } | ConvertTo-Json -Depth 10
 
-$interLogger.invoke("release", "DEBUG INFO", $false, 'info')
+$interLogger.invoke($logname, "DEBUG INFO", $false, 'info')
 [console]::writeline("====================================")
 $body
 [console]::writeline("====================================")
 
 try {
-  $interLogger.invoke("release", "Creating release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
+  $interLogger.invoke($logname, "Creating release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
   
   $response = Invoke-RestMethod -Uri "$env:CI_API_V4_URL/projects/$ENV:CI_PROJECT_ID/releases" `
                                 -Method 'POST' `
                                 -Headers @{ "PRIVATE-TOKEN" = "$env:GITLAB_API_KEY"; "Content-Type"  = "application/json" } `
                                 -Body $body 
   
-  $interLogger.invoke("release", "Successfully created release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
-  $interLogger.invoke("release", "Release URL: {kv:url=$($response._links.self)}", $false, 'info')
+  $interLogger.invoke($logname, "Successfully created release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
+  $interLogger.invoke($logname, "Release URL: {kv:url=$($response._links.self)}", $false, 'info')
 }
 catch {
-    $interLogger.invoke("release", "Failed to create release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}: {kv:error=$($_.exception.message)}", $false, 'error')
+    $interLogger.invoke($logname, "Failed to create release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}: {kv:error=$($_.exception.message)}", $false, 'error')
     $_
     exit 1
 }

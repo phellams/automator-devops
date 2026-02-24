@@ -11,6 +11,7 @@ $modulename     = $ModuleConfig.modulename
 $ModuleManifest = Test-ModuleManifest -path "./dist/$moduleName/$moduleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
+$logname = "deploy-stage-"
 #---CONFIG----------------------------
 
 # Set PreRelease
@@ -19,7 +20,7 @@ else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 
 
 # Check if module version exists
-$interLogger.invoke("deploy", "Checking if module version {kv:version=$ModuleVersion} exists in PSGallery", $false, 'info')
+$interLogger.invoke($logname, "Checking if module version {kv:version=$ModuleVersion} exists in PSGallery", $false, 'info')
 [string]$psgal_currentnversion = Find-Module -Name $modulename `
                                              -RequiredVersion $ModuleVersion `
                                              -Repository 'psgallery' `
@@ -27,14 +28,14 @@ $interLogger.invoke("deploy", "Checking if module version {kv:version=$ModuleVer
                                              -AllowPrerelease | Select-Object -ExpandProperty Version
 
 if ($psgal_currentnversion -eq $ModuleVersion) {
-  $interLogger.invoke("deploy", "Module version {kv:version=$ModuleVersion} already exists in PSGallery, skipping publish", $false, 'info')
+  $interLogger.invoke($logname, "Module version {kv:version=$ModuleVersion} already exists in PSGallery, skipping publish", $false, 'info')
   exit 0
 } else {
-  $interLogger.invoke("deploy", "Module version {kv:version=$ModuleVersion} does not exist in PSGallery", $false, 'info')
+  $interLogger.invoke($logname, "Module version {kv:version=$ModuleVersion} does not exist in PSGallery", $false, 'info')
 }
 
 # Publish to PSGallery if version does not exist
-$interLogger.invoke("deploy", "Attempting to publish {kv:module=$modulename} version {kv:version=$ModuleVersion} to PSGallery", $false, 'info')
+$interLogger.invoke($logname, "Attempting to publish {kv:module=$modulename} version {kv:version=$ModuleVersion} to PSGallery", $false, 'info')
 try {
   publish-Module `
     -path "./dist/$modulename" `
@@ -48,8 +49,8 @@ try {
     -Verbose
 
 } catch {
-  $interLogger.invoke("deploy", "Failed to publish $modulename to PSGallery", $false, 'error')
-  $interLogger.invoke("deploy", $_.Exception.Message, $false, 'error')
+  $interLogger.invoke($logname, "Failed to publish $modulename to PSGallery", $false, 'error')
+  $interLogger.invoke($logname, $_.Exception.Message, $false, 'error')
   exit 1
 }
 
