@@ -42,21 +42,19 @@ The local build script `./automator/devops/scripts/local-build.ps1` can be used 
 
 ‼️ **Dependancies:**
 
-*Script Parameters:*
-  - `-Automator` - initates script `./automator-devops_backup/localbuild.ps1`
-    - 🔴 Requires Linux with docker or WLS@2 with docker, runs the scripts in the [phellams-automator](https://hub.docker.com/r/sgkens/automator) docker image
-  - `-build` - initates script `./automator/devops/scripts/build/Build-Module.ps1`
-    - Uses **PSMPacker** to build module to `./dist/modulename` directory [https://github.com/phellams/psmpacker](https://github.com/phellams/psmpacker)
-  - `-psgal` - initates script `./automator/devops/scripts/build/build-package-psgallery.ps1`
-    - Uses **NupsForge** to build `nupkg` package to `./dist/psgal` directory [https://github.com/phellams/nupsforge](https://github.com/phellams/nupsforge)
-  - `-nupkg` - initates script `./automator/devops/scripts/build/build-package-generic-nuget.ps1`
-    - Uses ***NupsForge** to build `nupkg` package to `./dist/nuget` directory
-  - `-choconuspec` - initates script `./automator/devops/scripts/build/Build-nuspec-choco.ps1`
-    - Creates only the **Choco** `.nuspec` file to `./dist/modulename` directory, choco image in linux must be build with the choco docker image, see [https://github.com/chocolatey/choco](https://github.com/chocolatey/choco) or [https://hub.docker.com/r/chocolatey/chocolatey](https://hub.docker.com/r/chocolatey/chocolatey)
-  - `-choconupkgwindows` - initates script `./automator/devops/scripts/wip/build-package-choco-windows.ps1`
-    - 🔴 Requires Windows with Choco installed, uses ***NupsForge** to build choco `nupkg`
-  - `-phwriter` - initates script `./automator/devops/scripts/build/generate-phwriter-metadata.ps1`
-    - Uses ***PHWriter** to generate formatted help text for the module and output to `./libs/help_metadata` directory before build copy
+| Parameter | Description |
+|---|---|
+| **`-Automator`** | Build using [phellams-automator](https://gitlab.com/phellams/phellams-automator) docker image, if not script will look for powershell locally dependancies must be met see below: **Dependecies Modules(linux/Winx64)**, **Dependecies Binaries(linux/Winx64)** |
+| **`-build_dotnet_lib`** | Calls `build-dotnet-library.ps1` which calls `dotnet build` and `donet Pack` commands to release and or pack .nupkg of libs (WIP(works but needs ironing out some bugs)) |
+| **`-PhWriter`** | Generates the `phwriter-metadata.ps1` file using [phwriter](https://gitlab.com/phellams/phwriter) module |
+| **`-Pester`** | Calls `test-pester-before-build.ps1` witch calls `Invoke-Pester` from [Pester](https://github.com/pester/Pester) module |
+| **`-Sa`** | Calls `test-sa-before-build.ps1` witch calls `Invoke-ScriptAnalyzer` from [ScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) module |
+| **`-Build`** | Calls `build-module.ps1` from [psmpacker](https://gitlab.com/phellams/psmpacker) module, copies the module to the `dist` folder and generates the `VERIFICATION.txt` file. |
+| **`-Nuget`** | Calls `build-package-generic-nuget.ps1` witch calls `New-NuspecPackageFile` and `New-NupkgPackage` from [nupsforge](https://gitlab.com/phellams/nupsforge) module.
+| **`-PsGal`** | Calls `build-package-psgallery.ps1` witch calls `New-NuspecPackageFile` from [nupsforge](https://gitlab.com/phellams/nupsforge) module for psgal consumption |
+| **`-ChocoNuSpec`** | Calls `build-nuspec-choco.ps1` witch calls `New-ChocoNuspecfile` from [nupsforge](https://gitlab.com/phellams/nupsforge) module. |
+| **`-ChocoPackage`** (DOCKER-ONLY) | Calls `build-package-choco.sh` which can only be run on linux, calls `Choco Pack` and `Choco Push` from `choco\choco:latest` docker image. |
+| **`-ChocoPackageWindows`** (WINDOWS-ONLY) | Calls `build-package-choco-windows` witch calls `New-ChocoNuspecfile` and `New-ChocoPackage` from [nupsforge](https://gitlab.com/phellams/nupsforge) module. **Requires Chocolatey** |
 
 ### Examples
 
@@ -87,7 +85,7 @@ pwsh ./automator/devops/scripts/local-build.ps1 -build -choconupkgwindows -phwri
 pwsh ./automator/devops/scripts/local-build.ps1 -build -phwriter -choconuspec -ChocoPackage
 ```
 
-## 🟢 Build Config Json Template
+## **Build Config**
 
 **Example**:
 
@@ -140,115 +138,16 @@ Template looks for a metadata file in the root module directory named `phwriter-
  ./automator-devops/local-build.ps1 -build -phwriter
  ```
 
-**Example**:
-
-```powershell
-# phwriter-metadata.ps1
-$phwriter_metadata_array = @(
-    @{
-        Name        = $modulename;
-        version     = $moduleversion
-        Padding     = 1
-        Indent      = 1
-        #CustomLogo  = $CustomLogo
-        CommandInfo = @{
-            cmdlet      = "Get-FolderSizeFast";
-            synopsis    = "Get-FolderSizeFast [-Path <String>] [-Recurse] [-Detailed] [-Format <String>] [-Help]";
-            description = "This cmdlet calculates the size of a folder quickly by leveraging .NET methods. It supports recursion, progress display, and can output results in various formats including JSON and XML.";
-        }
-        ParamTable  = @(
-            @{
-                Name        = "Path"
-                Param       = "p|Path"
-                Type        = "string"
-                required    = $true
-                Description = "Specifies the path of the folder to calculate its size. Wildcards are supported."
-                Inline      = $false # Description on a new line
-            },
-            @{
-                Name        = "Recurse"
-                Param       = "r|Recurse"
-                Type        = "switch"
-                required    = $false
-                Description = "Indicates that the operation should process subdirectories recursively."
-                Inline      = $false
-            },
-            @{
-                Name        = "Detailed"
-                Param       = "d|Detailed"
-                Type        = "switch"
-                required    = $false
-                Description = "Outputs detailed information about each file and folder processed."
-                Inline      = $false
-            },
-            @{
-                Name        = "format"
-                Param       = "f|Format"
-                Type        = "string"
-                required    = $false
-                Description = "Specifies the output format. Supported formats are 'json' and 'xml'."
-                Inline      = $false
-            }
-        )
-        Examples    = @(
-            "Get-FolderSizeFast -Path 'C:\MyFolder' -Detailed",
-            "Get-FolderSizeFast -Path 'C:\MyFolder\*' -Recurse -ShowProgress",
-            "Get-FolderSizeFast -Path 'C:\MyFolder' -Recurse -format json",
-            "Get-FolderSizeFast -Path 'C:\MyFolder' -format xml"
-        )
-    }
-)
-```
-
 ## 🟢 Powershell Module Manifest Template
 
-**Example**:
 
-```powershell
-@{
-    RootModule         = 'modulename.psm1'
-    ModuleVersion      = '0.1.0'
-    GUID               = 'ccc9be26-17aa-4a86-8d5b-14d6d15def37'
-    Author             = 'Garvey k. Snow'
-    CompanyName        = 'Phellams'
-    Copyright          = '(c) 2025 Garvey k. Snow. All rights reserved.'
-    Description        = 'A PowerShell module for advanced file and folder searching with configuration management.'
-    FunctionsToExport  = @()
-    CmdletsToExport    = @()
-    VariablesToExport  = @()
-    AliasesToExport    = @()
-    PrivateData        = @{
-        PSData = @{
-            Tags                     = @('Help', 'Formatting', 'CLI', 'PowerShell', 'Documentation')
-            ReleaseNotes             = @{
-                # '1.2.1' = 'Initial release with New-PHWriter cmdlet for custom help formatting and enhanced layout.'
-            }
-            RequireLicenseAcceptance = $false
-            LicenseUri               = 'https://choosealicense.com/licenses/mit'
-            ProjectUri               = 'https://gitlab.com/phellams/zypline.git'
-            IconUri                  = 'https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/zypline/dist/png/zypline-logo-128x128.png'
-            # CHOCOLATE ---------------------
-            LicenseUrl               = 'https://choosealicense.com/licenses/mit'
-            ProjectUrl               = 'https://github.com/phellams/zypline'
-            IconUrl                  = 'https://raw.githubusercontent.com/phellams/phellams-general-resources/main/logos/zypline/zypline-logo-128x128.png'
-            Docsurl                  = 'https://pages.gitlab.io/sgkens/ptoml'
-            MailingListUrl           = 'https://github.com/phellams/zypline/issues'
-            projectSourceUrl         = 'https://github.com/phellams/zypline'
-            bugTrackerUrl            = 'https://github.com/phellams/zypline/issues'
-            Summary                  = 'A PowerShell module for advanced file and folder searching with configuration management.'
-            # CHOCOLATE ---------------------
-            Prerelease               = 'prerelease'
 
-        }        
-    }
-    RequiredModules    = @()
-    RequiredAssemblies = @()
-    FormatsToProcess   = @()
-    TypesToProcess     = @()
-    NestedModules      = @()
-    ScriptsToProcess   = @()
-}
-```
+## RoadMap:
+
+- [ ] Complete donet library build for library, AOT and non-AOT, CLI TUI apps
+  - [ ] Add `Build-CjProj` from powershell profile to automator devops scripts - Generates `cjproj` files for dotnet library from template AOT Compliant Configuration, with `IsPackable` set to `true` and `IsExe` set to `false`.
+  - [ ] Add `Build-CjProjExe` from powershell profile to automator devops scripts - Generates `cjproj` files for dotnet library from template AOT Compliant Configuration, with `IsPackable` set to `true` and `IsExe` set to `true`.
+- Set default library type for donet to `library`, create a seperate scripts and seperate template for `exe` and `library` donet projects.
 
 
 # License
