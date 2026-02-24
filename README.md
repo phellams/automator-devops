@@ -24,7 +24,9 @@ Devops template used to build and publish modules to the PowerShell Gallery, cho
 
 1. Edit the `./automator/devops/templates/build_config-template.json` file for the module you want to build
 2. Edit the `./automator/devops/templates/modulename.psd1` file for the module you want to build
-3. Run `pwsh ./automator/devops/scripts/local-build.ps1 -Automator -build -phwriter`
+3. Run:
+  * via docker image: `pwsh ./automator/devops/scripts/localbuilder.ps1 -Automator -build -phwriter`
+  * local powershell: `pwsh ./automator/devops/scripts/localbuilder.ps1 -build -phwriter`
 
 ## Scripts
 
@@ -38,7 +40,7 @@ Scripts are located in th `./automator/devops/scripts/` directory
 
 ## Local builder
 
-The local build script `./automator/devops/scripts/local-build.ps1` can be used to build the module locally, the script will build module to `./dist/` directory. 
+The local build script `./automator/devops/scripts/localbuilder.ps1` can be used to build the module locally, the script will build module to `./dist/` directory. 
 
 ‼️ **Dependancies:**
 
@@ -64,25 +66,25 @@ The local build script `./automator/devops/scripts/local-build.ps1` can be used 
 > ❗ if `.\phwriter-metadata.ps1` file is not found script will skip. 
 
 ```powershell
-pwsh ./automator/devops/scripts/local-build.ps1 -build -phwriter
+pwsh ./automator/devops/scripts/localbuilder.ps1 -build -phwriter
 ```
 
 🟪 Build `.nupkg` package locally compatable with **Powershell Gallery**, **GitLab Packages** and **Proget PsGallery**
 
 ```powershell
-pwsh ./automator/devops/scripts/local-build.ps1 -build -nupkg -phwriter
+pwsh ./automator/devops/scripts/localbuilder.ps1 -build -nupkg -phwriter
 ```
 
 🟪 Build Choco `.nupkg` package locally
 
 ```powershell
-pwsh ./automator/devops/scripts/local-build.ps1 -build -choconupkgwindows -phwriter
+pwsh ./automator/devops/scripts/localbuilder.ps1 -build -choconupkgwindows -phwriter
 ```
 
 🟪 Build Choco `.nupkg`  package locally in linux using the choco docker image.
 
 ```powershell
-pwsh ./automator/devops/scripts/local-build.ps1 -build -phwriter -choconuspec -ChocoPackage
+pwsh ./automator/devops/scripts/localbuilder.ps1 -build -phwriter -choconuspec -ChocoPackage
 ```
 
 ## **Build Config**
@@ -135,7 +137,7 @@ Template looks for a metadata file in the root module directory named `phwriter-
  or by using: 
  
  ```powershell
- ./automator-devops/local-build.ps1 -build -phwriter
+ ./automator-devops/localbuilder.ps1 -build -phwriter
  ```
 
 ## 🟢 Powershell Module Manifest Template
