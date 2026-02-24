@@ -148,5 +148,5 @@ $interLogger.invoke("Build", "CsVerify generated verification files", $false, 'i
 
 # Test Verifications.txt
 $interLogger.invoke("Build", "Testing verification files", $false, 'info')
-Test-VerificationFile -Path "./dist/$ModuleName"
+Test-Verification -Path "./dist/$ModuleName"
 $interLogger.invoke("Build", "Verification files tested", $false, 'info')
