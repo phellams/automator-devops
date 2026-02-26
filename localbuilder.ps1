@@ -112,7 +112,7 @@ if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1
 if ($psgal -and !$Automator) { ./automator-devops/scripts/build/build-package-psgallery.ps1 }
 if ($Nuget -and !$Automator) { ./automator-devops/scripts/build/build-package-generic-nuget.ps1 }
 if ($ChocoNuSpec -and !$Automator) { ./automator-devops/scripts/build/Build-nuspec-choco.ps1 }
-if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/wip/build-package-choco-windows.ps1 }
+if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/win-only/build-package-choco-windows.ps1 }
 if ($cleanup) { ./automator-devops/run-cleanup.ps1 }
 #TODO: add switch for clean up so it can be run sperately if needed
 #TODO: move run-cleanup to scripts dir
