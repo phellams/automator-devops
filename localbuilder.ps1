@@ -31,8 +31,10 @@ $logname = "builder"
 $interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
 
 if (!$build) {
+
     $interLogger.invoke($logname, "Build is required all other build options", $false, 'error')
-    return
+
+    return;
 }
 
 # Remove dist folder if it exists
@@ -44,18 +46,24 @@ else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 # TODO: #1 Once all required modules are release, change to pull from the psgal or from gitlab directly
 # TODO: #2 
 # local build on windows
+# TODO: add included modules from Phellam-Automator for Consisitance once all depenancies are released, as above move to psgal or gitlab once released
 if ($isWindows -and !$Automator) {
+    
     $interLogger.invoke($logname, "Importing local modules from 'G:\' {kv:ARC=Windows}", $false, 'info')
+    
     import-module -Name G:\devspace\projects\powershell\_repos\commitfusion\; # Get-GitAutoVerion extracted and used as standalone
     import-module -name G:\devspace\projects\powershell\_repos\quicklog\;
     import-module -name G:\devspace\projects\powershell\_repos\shelldock\;
     import-module -name G:\devspace\projects\powershell\_repos\psmpacker\; 
     import-module -Name G:\devspace\projects\powershell\_repos\nupsforge\; 
-    import-module -name G:\devspace\projects\powershell\_repos\csverify\;   
+    import-module -name G:\devspace\projects\powershell\_repos\csverify\; 
+
 }
 # linux build
 if ($isLinux -and !$Automator) {
+
     $interlogger.invoke($logname, "Importing local modules from /mnt/g/devspace/projects/powershell/_repos/ {kv:ARC=Linux}", $false, 'info')
+
     Import-Module -Name /mnt/g/devspace/projects/powershell/_repos/colorconsole/;
     import-module -Name /mnt/g/devspace/projects/powershell/_repos/commitfusion/;
     import-module -name /mnt/g/devspace/projects/powershell/_repos/quicklog/;
@@ -63,7 +71,9 @@ if ($isLinux -and !$Automator) {
     import-module -name /mnt/g/devspace/projects/powershell/_repos/psmpacker/;
     import-module -Name /mnt/g/devspace/projects/powershell/_repos/nupsforge/;
     import-module -name /mnt/g/devspace/projects/powershell/_repos/csverify/;
+
 }
+
 # docker phellams/automator
 if ($Automator) {
 
@@ -112,7 +122,7 @@ if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1
 if ($psgal -and !$Automator) { ./automator-devops/scripts/build/build-package-psgallery.ps1 }
 if ($Nuget -and !$Automator) { ./automator-devops/scripts/build/build-package-generic-nuget.ps1 }
 if ($ChocoNuSpec -and !$Automator) { ./automator-devops/scripts/build/Build-nuspec-choco.ps1 }
-if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/win-only/build-package-choco-windows.ps1 }
+if ($ChocoPackageWindows -and !$Automator) { ./automator-devops/scripts/build/win-only/build-package-choco-windows.ps1 }
 if ($cleanup) { ./automator-devops/run-cleanup.ps1 }
 #TODO: add switch for clean up so it can be run sperately if needed
 #TODO: move run-cleanup to scripts dir
