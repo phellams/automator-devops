@@ -4,30 +4,24 @@ $ModuleName              = $ModuleConfig.moduleName
 $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $PreRelease              = $ModuleManifest.PrivateData.PSData.Prerelease
-$logname                 = $global:__automator_devops.logname
+$logname                 = "build-stage-windows-choco"
 #---CONFIG----------------------------
 
 # Set PreRelease
 if (!$prerelease -or $prerelease.Length -eq 0) { $ModuleVersion = $ModuleVersion }
 else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 
-
 if (!(Test-Path -path "./dist/nuget")) { mkdir "./dist/nuget" }
 if (!(Test-Path -path "./dist/choco")) { mkdir "./dist/choco" }
 if (!(Test-Path -path "./dist/psgal")) { mkdir "./dist/psgal" }
+
+$interlogger.invoke($logname, "Running build on nuspec", $false, 'info')
 
 # ===========================================
 #                CHOCOLATEY
 # ===========================================
 # Remove nuspec file from build bold
 #Remove-Item -Path "./dist/$ModuleName/$ModuleName.nuspec"
-
-# Choco supports markdown nuget and psgallary done
-$markdown_readme = Get-Content -Path ./devops/templates/choco_description.md -Raw `
-                               -ErrorAction Stop `
-                               -Encoding UTF8 `
-                               -Force `
-                               -WarningAction SilentlyContinue
 
 # release notes are in the form of an hashtable but choco needs a string
 if ($ModuleManifest.PrivateData.PSData.ReleaseNotes -is [System.Collections.Hashtable]) {
@@ -41,7 +35,7 @@ $NuSpecParamsChoco = @{
   ModuleName        = $ModuleName
   ModuleVersion     = $ModuleManifest.Version #-replace "/.\d+$", "" # remove the extra .0 as semver has 0.0.0 and powershell 0.0.0.0
   Author            = $ModuleManifest.Author
-  Description       = $markdown_readme #-replace '```', '```' -replace '\`', '``'
+  Description       = $ModuleManifest.PrivateData.PSData.ChocoDescription
   Summary           = $ModuleManifest.PrivateData.PSData.Summary
   ProjectUrl        = $ModuleManifest.PrivateData.PSData.ProjectUrl
   IconUrl           = $ModuleManifest.PrivateData.PSData.IconUrl
@@ -61,12 +55,25 @@ $NuSpecParamsChoco = @{
 
 
 # Create New Verification CheckSums Request root module directory
-# # # # # Set-Location "./dist/$ModuleName"
-# # # # # New-VerificationFile -RootPath ./ -OutputPath ./tools | Format-Table -auto
-# # # # # Test-Verification -Path ./ | Format-Table -auto
-# # # # # Set-Location ../../ # back
+# Set-Location "./dist/$ModuleName"
+# New-VerificationFile -RootPath ./ -OutputPath ./tools | Format-Table -auto
+# Test-Verification -Path ./ | Format-Table -auto
+# Set-Location ../../ # back
 # Create Choco nuspec
 New-ChocoNuspecFile @NuSpecParamsChoco
+
+# Some additional checks before sending to build
+# check if requirement tootls/LICENSE.txt exists
+if (!(Test-Path -path "./dist/$modulename/tools/LICENSE.txt")) {
+  throw [System.Exception]::new("ChocoMonoPackage requires tools/LICENSE.txt")
+  exit 1 # fail pipeline if license file is not found as this is required for package verification and security
+}
+
+# check if requirement tools/VERIFICATION.txt exists
+if (!(Test-Path -path "./dist/$modulename/tools/VERIFICATION.txt")) {
+  throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
+  exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
+}
 
 # Create ENV as Choco image does not support powershell execution
 # Set the choco package name as a ENV and use choco push
