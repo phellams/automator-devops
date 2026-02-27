@@ -77,7 +77,7 @@ if ($isLinux -and !$Automator) {
 # docker phellams/automator
 if ($Automator) {
 
-    $docker_image = "docker.io/sgkens/phellams-automator:2.7.6"
+    $docker_image = "docker.io/sgkens/phellams-automator:$ENV:AUTOMATOR_VERSION"
 
     $interLogger.invoke($logname, "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
 
