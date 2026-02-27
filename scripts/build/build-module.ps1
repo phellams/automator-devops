@@ -143,11 +143,13 @@ Set-Content -Path "build.env" -Value $BuildEnvContent -Force -Encoding UTF8
 # Run CsVerify generate Verifications.txt for choco and for package verification.
 $interLogger.invoke($logname, "Running CsVerify to generate verification files", $false, 'info')
 
-New-VerificationFile -RootPath "./dist/$ModuleName" -OutputPath "./dist/$ModuleName/tools"
+Set-Location "./dist/$ModuleName"
+
+New-VerificationFile -RootPath "./" -OutputPath "./tools"
 
 $interLogger.invoke($logname, "CsVerify generated verification files", $false, 'info')
 
 # Test Verifications.txt
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
-Test-Verification -Path "./dist/$ModuleName"
+Test-Verification -Path "./"
 $interLogger.invoke($logname, "Verification files tested", $false, 'info')
