@@ -153,3 +153,5 @@ $interLogger.invoke($logname, "CsVerify generated verification files", $false, '
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
 Test-Verification -Path "./"
 $interLogger.invoke($logname, "Verification files tested", $false, 'info')
+
+Set-Location ../../
