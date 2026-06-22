@@ -4,6 +4,7 @@ using module ../core/core.psm1
 $interLogger = $global:__automator_devops.interLogger
 $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
+$logname = "build-stage"
 
 $interLogger.invoke($logname, "Running build on nuspec for nuget {inf:kv:buildMethod=NUPSFORGE}", $false, 'info')
 

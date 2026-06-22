@@ -1,3 +1,4 @@
+using module ../core/Get-ConventionalCommitVersion.psm1
 using module ../core/Get-GitAutoVersion.psm1
 using module ../core/core.psm1
 
@@ -17,7 +18,16 @@ $phwriter                = $ModuleConfig.phwriter
 $logname                 = "build-stage"
 #---CONFIG----------------------------
 
-$AutoVersion = (Get-GitAutoVersion).Version
+[string]$VersioningStyle = "gitauto"
+if ($ModuleConfig.versioning -eq "conventional") {
+    $VersioningStyle = "conventional"
+}
+
+if ($VersioningStyle -eq "conventional") {
+    $AutoVersion = (Get-ConventionalCommitVersion).Version
+} else {
+    $AutoVersion = (Get-GitAutoVersion).Version
+}
 
 $interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
 $interLogger.invoke($logname, "Creating dist folders", $false, 'info')
@@ -82,7 +92,12 @@ if (!(Test-Path -Path "./dist/$moduleName/tools")) {
 $interLogger.invoke($logname, "Copying files to dist {inf:kv:BuildSource=PSMPacker}", $false, 'info')
 
 # Copy module files to dist for packaging
-Build-Module -SourcePath ./ `
+[string]$SourcePath = "./"
+if (Test-Path "./src/$ModuleName/$ModuleName.psd1") {
+    $SourcePath = "./src/$ModuleName"
+}
+
+Build-Module -SourcePath $SourcePath `
              -DestinationPath './dist' `
              -Name $ModuleName `
              -IncrementVersion None `
@@ -92,6 +107,16 @@ Build-Module -SourcePath ./ `
              -Manifest `
              -Version $AutoVersion
             #  -Dependencies @(@{type="module";name="quicklog";version="1.2.3"})
+
+# Copy LICENSE and README.md if they exist in the root but not in SourcePath
+if ($SourcePath -ne "./") {
+    if (Test-Path "./LICENSE" -and -not (Test-Path "$SourcePath/LICENSE")) {
+        Copy-Item -Path "./LICENSE" -Destination "./dist/$ModuleName/LICENSE" -Force
+    }
+    if (Test-Path "./README.md" -and -not (Test-Path "$SourcePath/README.md")) {
+        Copy-Item -Path "./README.md" -Destination "./dist/$ModuleName/README.md" -Force
+    }
+}
 
 #!FIX: rename README.md to readme.md as nuget is case sensitive
 if (Test-Path -Path "./dist/$ModuleName/README.md") {
