@@ -18,8 +18,9 @@ param (
 # Import Module config
 
 #---CONFIG----------------------------
-$ModuleConfig = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
-$ModuleName = $ModuleConfig.moduleName
+$rawConfig = Get-Content -Path ./build_config.json | ConvertFrom-Json
+$ModuleConfig = if ($rawConfig.PSModule) { $rawConfig.PSModule } elseif ($rawConfig.PSModeule) { $rawConfig.PSModeule } else { $rawConfig }
+$ModuleName = $ModuleConfig.modulename
 #---CONFIG----------------------------
 
 #---UI ELEMENTS Shortened-------------
@@ -77,7 +78,7 @@ if ($isLinux -and !$Automator) {
 # docker phellams/automator
 if ($Automator) {
 
-    $docker_image = "docker.io/sgkens/phellams-automator:2.8.0"
+    $docker_image = "docker.io/sgkens/phellams-automator:$($ENV:AUTOMATOR_VERSION)"
 
     $interLogger.invoke($logname, "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
 

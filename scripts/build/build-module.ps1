@@ -116,7 +116,16 @@ if ($SourcePath -ne "./") {
     if (Test-Path "./README.md" -and -not (Test-Path "$SourcePath/README.md")) {
         Copy-Item -Path "./README.md" -Destination "./dist/$ModuleName/README.md" -Force
     }
+} 
+
+# copy LICENCE to tools/LICENSE.txt
+if (Test-Path -Path "./dist/$ModuleName/LICENSE") {
+    New-Item -ItemType File -Path "./dist/$ModuleName/tools/LICENSE.txt"
+    Get-Content -Path "./dist/$ModuleName/LICENSE" | Out-File "./dist/$ModuleName/tools/LICENSE.txt"
+   # Copy-Item -Path "./dist/$ModuleName/LICENSE" -Destination "./dist/$ModuleName/tools/LICENSE.txt" -Force
+    $interLogger.invoke($logname, "CHOCO DEPENDANCY: LICENSE -> tools/LICENSE.txt <- compliance", $false, 'info')
 }
+
 
 #!FIX: rename README.md to readme.md as nuget is case sensitive
 if (Test-Path -Path "./dist/$ModuleName/README.md") {
@@ -170,13 +179,13 @@ $interLogger.invoke($logname, "Running CsVerify to generate verification files",
 
 Set-Location "./dist/$ModuleName"
 
-New-VerificationFile -RootPath "./" -OutputPath "./tools"
+New-VerificationFile -RootPath "./" -OutputPath "./tools" | Format-Table
 
 $interLogger.invoke($logname, "CsVerify generated verification files", $false, 'info')
 
 # Test Verifications.txt
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
-Test-Verification -Path "./"
+Test-Verification -Path "./" | Format-Table
 $interLogger.invoke($logname, "Verification files tested", $false, 'info')
 
 Set-Location ../../
