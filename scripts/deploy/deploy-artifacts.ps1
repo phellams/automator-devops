@@ -113,7 +113,7 @@ if ($chocoFile) {
     exit 1
 }
 
-# Upload ZIP file
+# Upload powershell gallary zip file
 $interLogger.invoke($logname, "Finding ZIP file: $ModuleName-$moduleversion-psgal.zip to upload...", $false, 'info')
 $zipFile = Get-ChildItem -Recurse './dist/psgal' -Filter "$ModuleName*.zip" | 
     Where-Object { $_.Name -like "$ModuleName*$moduleversion*psgal*.zip" } | 
@@ -143,6 +143,37 @@ if ($zipFile) {
     exit 1
 }
 
+# Upload tar.gz file
+$interLogger.invoke($logname, "Finding tar.gz file: $ModuleName-$moduleversion.tar.gz to upload...", $false, 'info')
+$targzFile = Get-ChildItem -Recurse './dist/generic' -Filter "$ModuleName*.tar.gz" | 
+    Where-Object { $_.Name -like "$ModuleName*$moduleversion*.tar.gz" } | 
+    Select-Object -First 1
+
+if ($targzFile) {
+    $targzFile | Select-Object Name, FullName
+    $interLogger.invoke($logname, "Uploading tar.gz file: $($targzFile.FullName)", $false, 'info')
+    try {
+        Invoke-RestMethod -Uri "$baseUrl/$($targzFile.Name)" -Method Put -InFile $targzFile.FullName -Headers $headers
+        $interLogger.invoke($logname, "Uploaded: $($targzFile.Name)", $false, 'info')
+    }
+    catch {
+        $interLogger.invoke($logname, "tar.gz upload failed: $($_.Exception.Message)", $false, 'error')
+        exit 1
+    }
+} else {
+    $interLogger.invoke($logname, "No tar.gz file found to upload.", $false, 'info')
+    # List what files are actually there for debugging
+    $alltargzFiles = Get-ChildItem -Recurse './dist/generic' -Filter "*.tar.gz" -ErrorAction SilentlyContinue
+    if ($alltargzFiles) {
+        $interLogger.invoke($logname, "Available tar.gz files:", $false, 'info')
+        $alltargzFiles | ForEach-Object { [console]::writeline("  $($_.Name)") }
+    } else {
+        $interLogger.invoke($logname, "No .tar.gz files found in ./dist/generic/", $false, 'error')
+    }
+    exit 1
+}
+
+# Upload NUGET .net Package
 if((test-path -path "./dist/dotnet")) {
     # upload dotnet package
     $interLogger.invoke($logname, "Finding .NET package: $ModuleName.$moduleversion.nupkg to upload...", $false, 'info')
