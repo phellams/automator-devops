@@ -56,15 +56,14 @@ $interLogger.invoke($logname, "After Build create zip of psgallery upload", $fal
 # Create Zip With .nuspec file for PSGallery
 # copy-item -recurse -path "./dist/$ModuleName" -destination "./dist/psgal/$ModuleName"
 $module_source_path = [system.io.path]::combine($pwd, "dist", "$ModuleName")
-$module_output_path = [system.io.path]::combine($pwd, "dist", "psgal")
-$zipFileName = "$ModuleName-$ModuleVersion-psgal.zip"
+$module_output_path_psgal = [system.io.path]::combine($pwd, "dist", "psgal")
 $interLogger.invoke($logname, "Creating Zip File for PSGallery", $false, 'info')
 $interLogger.invoke($logname, "Source: $module_source_path/*", $false, 'info')
-$interLogger.invoke($logname, "output: $module_output_path/$($zipFileName)", $false, 'info')
+$interLogger.invoke($logname, "output: $module_output_path_psgal/$ModuleName-$ModuleVersion-psgal.zip", $false, 'info')
 
 try{
   compress-archive -path "$module_source_path/*" `
-                   -destinationpath "$module_output_path/$zipFileName" `
+                   -destinationpath "$module_output_path_psgal/$ModuleName-$ModuleVersion-psgal.zip" `
                    -compressionlevel optimal `
                    -update
 }catch {
