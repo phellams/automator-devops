@@ -77,20 +77,26 @@ $generic_package = Request-GenericPackage -ProjectId $ENV:CI_PROJECT_ID `
 $nuget_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion.nupkg"} | Sort-Object created_at | Select-Object -First 1   
 $choco_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-choco.nupkg"} | Sort-Object created_at | Select-Object -First 1   
 $psgal_generic_package = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-psgal.zip"} | Sort-Object created_at | Select-Object -First 1                      
+$tar_generic_package   = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-tar.gz"} | Sort-Object created_at | Select-Object -First 1                      
+
 
 $interLogger.invoke($logname, "DEBUG INFO: GENERIC PACKAGE", $false, 'info')
-[console]::writeline("====================================")
+[console]::writeline("{ URLS }====================================")
 $kv.invoke("NUGET NUPKG URL", "$($nuget_generic_package.download_url)")
 $kv.invoke("CHOCO NUPKG URL", "$($choco_generic_package.download_url)")
 $kv.invoke("PSGAL ZIP URL", "$($psgal_generic_package.download_url)")
-[console]::writeline("====================================")
+$kv.invoke("GENERIC TAR.GZ URL", "$($tar_generic_package.download_url)")
+[console]::writeline("{ HASHES }====================================")
 $kv.invoke("NUGET NUPKG HASH", "$($nuget_generic_package.file_sha256)")
 $kv.invoke("CHOCO NUPKG HASH", "$($choco_generic_package.file_sha256)")
 $kv.invoke("PSGAL ZIP HASH", "$($psgal_generic_package.file_sha256)")
+$kv.invoke("GENERIC TAR.GZ HASH", "$($tar_generic_package.file_sha256)")
+
 [console]::writeline("====================================")
 $nuget_generic_package
 $choco_generic_package
 $psgal_generic_package
+$tar_generic_package
 [console]::writeline("====================================")
 
 
@@ -118,6 +124,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'NUGET_NUPKG_HASH', $nuget_generic_package.file_sha256 `
                                       -replace 'CHOCO_NUPKG_HASH', $choco_generic_package.file_sha256 `
                                       -replace 'PSGAL_ZIP_HASH', $psgal_generic_package.file_sha256 `
+                                      -replace 'GENERIC_TAR.GZ_HASH', $tar_generic_package.file_sha256 `
                                       -replace 'RELEASE_NOTES', $release_notes
 
 $interLogger.invoke($logname, "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
