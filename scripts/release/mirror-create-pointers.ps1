@@ -31,17 +31,17 @@ try {
     $repo_string = "https://$gituser`:$ENV:GITHUB_API_KEY@github.com/$gitgroup/$ModuleName.git"
     git remote add $github_mirror_name $repo_string
     git remote set-url --push $github_mirror_name $repo_string
-    $interLogger.invoke($logname, "Adding Github Mirror: {kv:url=$repo_string}", $false, 'info')
+    $interLogger.invoke($logname, "Pushing repository history to the GitHub mirror {kv:url=https://github.com/$gitgroup/$ModuleName.git}", $false, 'info')
     git push $github_mirror_name --all
     if($LASTEXITCODE -eq 0) {
-        $interLogger.invoke($logname, "Successfully added Github Mirror: {kv:url=$repo_string}", $false, 'info')
+        $interLogger.invoke($logname, "Updated the GitHub mirror {kv:url=https://github.com/$gitgroup/$ModuleName.git}", $false, 'success')
     }else {
-        $interLogger.invoke($logname, "Failed to add Github Mirror Exit Code:{kv:code=$LASTEXITCODE}, {kv:url=$repo_string}", $false, 'error')
+        $interLogger.invoke($logname, "Failed to update the GitHub mirror {err:kv:exitcode=$LASTEXITCODE} {err:kv:url=https://github.com/$gitgroup/$ModuleName.git}", $false, 'error')
         exit 1
     }
 
 } catch [system.exception] {
-    $interLogger.invoke($logname, "Failed to create local mirror: {kv:error=$($_.exception.message)}", $false, 'error')    
+    $interLogger.invoke($logname, "GitHub mirror operation failed {err:kv:error=$($_.exception.message)}", $false, 'error')
 }
 
 # Remove local Mirrors

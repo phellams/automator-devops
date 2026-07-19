@@ -11,7 +11,7 @@ $modulename     = $ModuleConfig.modulename
 $ModuleManifest = Test-ModuleManifest -path "./dist/$moduleName/$moduleName.psd1"
 [string]$moduleversion   = $ModuleManifest.Version.ToString()
 $prerelease     = $ModuleManifest.PrivateData.PSData.Prerelease
-$logname = "deploy-stage-"
+$logname = "deploy-stage-psgallery"
 #---CONFIG----------------------------
 
 # Set PreRelease
@@ -20,7 +20,7 @@ else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 
 
 # Check if module version exists
-$interLogger.invoke($logname, "Checking if module version {kv:version=$ModuleVersion} exists in PSGallery", $false, 'info')
+$interLogger.invoke($logname, "Checking PowerShell Gallery for the module version {kv:module=$modulename} {kv:version=$ModuleVersion}", $false, 'info')
 [string]$psgal_currentnversion = Find-Module -Name $modulename `
                                              -RequiredVersion $ModuleVersion `
                                              -Repository 'psgallery' `
@@ -28,14 +28,14 @@ $interLogger.invoke($logname, "Checking if module version {kv:version=$ModuleVer
                                              -AllowPrerelease | Select-Object -ExpandProperty Version
 
 if ($psgal_currentnversion -eq $ModuleVersion) {
-  $interLogger.invoke($logname, "Module version {kv:version=$ModuleVersion} already exists in PSGallery, skipping publish", $false, 'info')
+  $interLogger.invoke($logname, "PowerShell Gallery version already exists; skipping publication {kv:module=$modulename} {kv:version=$ModuleVersion}", $false, 'info')
   exit 0
 } else {
-  $interLogger.invoke($logname, "Module version {kv:version=$ModuleVersion} does not exist in PSGallery", $false, 'info')
+  $interLogger.invoke($logname, 'PowerShell Gallery version does not exist; continuing with publication', $false, 'info')
 }
 
 # Publish to PSGallery if version does not exist
-$interLogger.invoke($logname, "Attempting to publish {kv:module=$modulename} version {kv:version=$ModuleVersion} to PSGallery", $false, 'info')
+$interLogger.invoke($logname, "Publishing the module to PowerShell Gallery {kv:module=$modulename} {kv:version=$ModuleVersion}", $false, 'info')
 try {
   publish-Module `
     -path "./dist/$modulename" `
@@ -48,9 +48,10 @@ try {
     -Tags $ModuleManifest.Tags `
     -Verbose
 
+  $interLogger.invoke($logname, "Published the module to PowerShell Gallery {kv:module=$modulename} {kv:version=$ModuleVersion}", $false, 'success')
+
 } catch {
-  $interLogger.invoke($logname, "Failed to publish $modulename to PSGallery", $false, 'error')
-  $interLogger.invoke($logname, $_.Exception.Message, $false, 'error')
+  $interLogger.invoke($logname, "PowerShell Gallery publication failed {err:kv:module=$modulename} {err:kv:error=$($_.Exception.Message)}", $false, 'error')
   exit 1
 }
 

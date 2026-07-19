@@ -14,7 +14,7 @@ $ModuleManifest          = Test-ModuleManifest -path "./dist/$ModuleName/$Module
 $logname                 = "build-stage"
 #---CONFIG----------------------------
 
-$interLogger.invoke($logname, "Running build on nuspec for choco", $false, 'info')
+$interLogger.invoke($logname, 'Starting Chocolatey nuspec build', $false, 'info')
 
 # Set PreRelease
 if (!$prerelease -or $prerelease.Length -eq 0) { $ModuleVersion = $ModuleVersion }
@@ -38,7 +38,7 @@ if ($ModuleManifest.PrivateData.PSData.ReleaseNotes -is [array]) {
   $Notes = $ModuleManifest.PrivateData.PSData.ReleaseNotes -join "`n"
 }
 else {
-  [console]::writeline("Release notes must be an array of strings in the module manifest.")
+  $interLogger.invoke($logname, 'Release notes are not a string array; using the default release note', $false, 'warn')
   # assume no release notes
 }
 
@@ -75,30 +75,32 @@ $NuSpecParamsChoco = @{
 
 try {
 
-  $interLogger.invoke($logname, "Creating choco nuspec", $false, 'info')
+  $interLogger.invoke($logname, 'Creating the Chocolatey nuspec', $false, 'info')
 
   New-ChocoNuspecFile @NuSpecParamsChoco
 
   # Use Choco mono to create choco package and deploy
   if($IsWindows){
-    $interLogger.invoke($logname, "Creating choco package {wrn:kv:Platform=Windows}", $false, 'info')
+    $interLogger.invoke($logname, 'Creating the Chocolatey package {wrn:kv:platform=Windows}', $false, 'info')
     New-ChocoPackage -path ".\dist\$ModuleName"  -outpath ".\dist\choco"
   }
 
 } catch {
-  [console]::write( "Error creating Choco package: $($_.Exception.Message)`n" )
+  $interLogger.invoke($logname, "Chocolatey package creation failed {err:kv:error=$($_.Exception.Message)}", $false, 'error')
   exit 1
 }
 
 # Some additional checks before sending to build
 # check if requirement tootls/LICENSE.txt exists
 if (!(Test-Path -path "./dist/$modulename/tools/LICENSE.txt")) {
+  $interLogger.invoke($logname, 'Chocolatey compliance license was not found {err:kv:path=tools/LICENSE.txt}', $false, 'error')
   throw [System.Exception]::new("ChocoMonoPackage requires tools/LICENSE.txt")
   exit 1 # fail pipeline if license file is not found as this is required for package verification and security
 }
 
 # check if requirement tools/VERIFICATION.txt exists
 if (!(Test-Path -path "./dist/$modulename/tools/VERIFICATION.txt")) {
+  $interLogger.invoke($logname, 'Chocolatey verification file was not found {err:kv:path=tools/VERIFICATION.txt}', $false, 'error')
   throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
   exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
 }

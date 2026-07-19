@@ -6,7 +6,7 @@ $kv = $global:__automator_devops.kvinc
 $logname = $Global:__automator_devops.logname
 #---UI ELEMENTS Shortened------------
 
-$interLogger.invoke($logname, "Running build on nuspec for nuget {inf:kv:target=Powershell Gallery} {inf:kv:buildMethod=NUPSFORGE}", $false, 'info')
+$interLogger.invoke($logname, 'Starting PowerShell Gallery package build {inf:kv:method=NupsForge}', $false, 'info')
 
 #---CONFIG----------------------------
 $ModuleConfig            = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
@@ -51,15 +51,13 @@ $NuSpecParams = @{
 # Create Nuget nuspec, Proget, gitlab, PSGallery
 New-NuspecPackageFile @NuSpecParams
 
-$interLogger.invoke($logname, "After Build create zip of psgallery upload", $false, 'info')
+$interLogger.invoke($logname, 'Creating the PowerShell Gallery release archive', $false, 'info')
 
 # Create Zip With .nuspec file for PSGallery
 # copy-item -recurse -path "./dist/$ModuleName" -destination "./dist/psgal/$ModuleName"
 $module_source_path = [system.io.path]::combine($pwd, "dist", "$ModuleName")
 $module_output_path_psgal = [system.io.path]::combine($pwd, "dist", "psgal")
-$interLogger.invoke($logname, "Creating Zip File for PSGallery", $false, 'info')
-$interLogger.invoke($logname, "Source: $module_source_path/*", $false, 'info')
-$interLogger.invoke($logname, "output: $module_output_path_psgal/$ModuleName-$ModuleVersion-psgal.zip", $false, 'info')
+$interLogger.invoke($logname, "Archive paths {kv:source=$module_source_path/*} {kv:output=$module_output_path_psgal/$ModuleName-$ModuleVersion-psgal.zip}", $false, 'info')
 
 try{
   compress-archive -path "$module_source_path/*" `
@@ -67,13 +65,14 @@ try{
                    -compressionlevel optimal `
                    -update
 }catch {
-  $interLogger.invoke($logname, "Error creating ZIP of PSGallery Folder: $($_.Exception.Message)", $false, 'error')
+  $interLogger.invoke($logname, "Failed to create the PowerShell Gallery archive {err:kv:error=$($_.Exception.Message)}", $false, 'error')
   exit 1
 }
 
-$interLogger.invoke($logname, "Created Zip File for PSGallery", $false, 'info')
+$interLogger.invoke($logname, 'Created the PowerShell Gallery release archive', $false, 'success')
 # check if requirement tools/VERIFICATION.txt exists
 if (!(Test-Path -path "./dist/$modulename/tools/VERIFICATION.txt")) {
+  $interLogger.invoke($logname, 'Package verification file was not found {err:kv:path=tools/VERIFICATION.txt}', $false, 'error')
   throw [System.Exception]::new("ChocoMonoPackage requires tools/VERIFICATION.txt")
   exit 1 # fail pipeline if verification file is not found as this is required for package verification and security
 }

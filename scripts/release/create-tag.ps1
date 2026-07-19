@@ -29,12 +29,12 @@ git tag "$ModuleVersion"
 
 $git_remote_url = "https://oauth2:$($ENV:GITLAB_API_KEY)@$gitlab_host/$gitgroup/$ModuleName.git"
 
-$interLogger.invoke($logname, "Pushing git tag {kv:version=$ModuleVersion} to {kv:url=$git_remote_url}", $false, 'info')
+$interLogger.invoke($logname, "Pushing Git tag {kv:version=$ModuleVersion} {kv:url=https://$gitlab_host/$gitgroup/$ModuleName.git}", $false, 'info')
 git push --tags $git_remote_url HEAD:main
 
 if($LASTEXITCODE -ne 0) {
-    $interLogger.invoke($logname, "Failed to push git tag {kv:version=$ModuleVersion} to {kv:url=$git_remote_url}", $false, 'error')
+    $interLogger.invoke($logname, "Failed to push the Git tag {err:kv:version=$ModuleVersion} {err:kv:url=https://$gitlab_host/$gitgroup/$ModuleName.git}", $false, 'error')
     exit 1
 } else {
-    $interLogger.invoke($logname, "Successfully pushed git tag {kv:version=$ModuleVersion} to {kv:url=$git_remote_url}", $false, 'info')
+    $interLogger.invoke($logname, "Pushed the Git tag {kv:version=$ModuleVersion} {kv:url=https://$gitlab_host/$gitgroup/$ModuleName.git}", $false, 'success')
 }

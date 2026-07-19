@@ -38,7 +38,7 @@ $logname = "builder"
 # $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 
-$interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
+$interLogger.invoke($logname, "Starting local build for {kv:module=$ModuleName}", $false, 'info')
 
 $ModuleBuildRequested = $Build -or $PsGal -or $Nuget -or $ChocoNuSpec -or $ChocoPackage -or $ChocoPackageWindows -or $Phwriter -or $pester
 $DotNetBuildRequested = $build_dotnet_lib -or $DotNetBuild -or $DotNetPackage -or $NativePackage
@@ -51,14 +51,17 @@ if (!$ModuleBuildRequested -and !$DotNetBuildRequested -and !$cleanup) {
 }
 
 if (($PsGal -or $Nuget -or $ChocoNuSpec -or $ChocoPackage -or $ChocoPackageWindows) -and !$Build) {
+    $interLogger.invoke($logname, 'PowerShell module packaging options require -Build', $false, 'error')
     throw [System.ArgumentException]::new('PowerShell module packaging options require -Build.')
 }
 
 if ($NativePackage -and @($RuntimeIdentifier).Count -eq 0) {
+    $interLogger.invoke($logname, 'Native packaging requires at least one runtime identifier', $false, 'error')
     throw [System.ArgumentException]::new('-NativePackage requires -RuntimeIdentifier.')
 }
 
 # Remove dist folder if it exists
+$interLogger.invoke($logname, 'Preparing the distribution directory', $false, 'info')
 if ( test-path ".\dist" ){ remove-item ".\dist" -Recurse -Force -erroraction silentlycontinue }
 else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 
@@ -70,7 +73,7 @@ else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 # TODO: add included modules from Phellam-Automator for Consisitance once all depenancies are released, as above move to psgal or gitlab once released
 if ($isWindows -and !$Automator -and $ModuleBuildRequested) {
     
-    $interLogger.invoke($logname, "Importing local modules from 'G:\' {kv:ARC=Windows}", $false, 'info')
+    $interLogger.invoke($logname, "Importing local build dependencies {kv:path=G:\} {kv:platform=Windows}", $false, 'info')
     
     import-module -Name G:\devspace\projects\powershell\_repos\commitfusion\; # Get-GitAutoVerion extracted and used as standalone
     import-module -name G:\devspace\projects\powershell\_repos\quicklog\;
@@ -83,7 +86,7 @@ if ($isWindows -and !$Automator -and $ModuleBuildRequested) {
 # linux build
 if ($isLinux -and !$Automator -and $ModuleBuildRequested) {
 
-    $interlogger.invoke($logname, "Importing local modules from /mnt/g/devspace/projects/powershell/_repos/ {kv:ARC=Linux}", $false, 'info')
+    $interlogger.invoke($logname, "Importing local build dependencies {kv:path=/mnt/g/devspace/projects/powershell/_repos/} {kv:platform=Linux}", $false, 'info')
 
     Import-Module -Name /mnt/g/devspace/projects/powershell/_repos/colorconsole/;
     import-module -Name /mnt/g/devspace/projects/powershell/_repos/commitfusion/;
@@ -100,7 +103,7 @@ if ($Automator) {
 
     $docker_image = "docker.io/sgkens/phellams-automator:$($ENV:AUTOMATOR_VERSION)"
 
-    $interLogger.invoke($logname, "Running Phellams-Automator on {kv:DockerImage=$docker_image}", $false, 'info')
+    $interLogger.invoke($logname, "Running build in Phellams Automator {kv:image=$docker_image}", $false, 'info')
 
     [string]$scripts_to_run = ""
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
@@ -137,7 +140,7 @@ if ($Automator) {
         }
         docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $SafeDirectory; $scripts_to_run"
         $docker_image = "docker.io/chocolatey/choco:latest"
-        $interLogger.invoke($logname, "Switching to Choco on {kv:DockerImage=$docker_image}", $false, 'info')
+        $interLogger.invoke($logname, "Switching to the Chocolatey build image {kv:image=$docker_image}", $false, 'info')
         docker run --rm -v .:/$ModuleName $docker_image bash -c "cd /$modulename; $build_package_choco"
     }else{
         docker run --rm -v .:/$ModuleName $docker_image pwsh -c "cd /$modulename; $SafeDirectory; $scripts_to_run"

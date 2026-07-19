@@ -90,6 +90,6 @@ try {
   # Rename-Item -Path "$module_source_path$ModuleName.$moduleVersion.nupkg" `
   #             -NewName "$ModuleName.$moduleVersion-choco.nupkg"
 } catch {
-  [console]::write( "Error creating Choco package: $($_.Exception.Message)`n" )
+  $interLogger.invoke($logname, "Chocolatey package creation failed {err:kv:error=$($_.Exception.Message)}", $false, 'error')
   exit 1
 }

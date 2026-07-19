@@ -17,7 +17,7 @@ $codecovUploaderPath = "codecov" # Or any other suitable path
 
 # 2. Verify the Codecov Uploader is found
 if (!(Get-Command $codecovUploaderPath -ErrorAction SilentlyContinue)) {
-    [console]::write("")
+    $interLogger.invoke($logname, "Codecov uploader was not found {err:kv:command=$codecovUploaderPath}", $false, 'error')
     exit 1
 }
 
@@ -27,8 +27,8 @@ if (!(Get-Command $codecovUploaderPath -ErrorAction SilentlyContinue)) {
 $coverageReportFile = "./coverage.xml" # <--- IMPORTANT: Update this path!
 
 if (!(Test-Path $coverageReportFile)) {
+    $interLogger.invoke($logname, "Coverage report was not found {err:kv:file=$coverageReportFile}", $false, 'error')
     throw [System.Exception]::new("Coverage report file not found: $coverageReportFile. Please ensure your test runner generated it correctly.")
-    $interLogger.invoke($logname, "Coverage report file not found: {kv:file=$coverageReportFile}. Please ensure your test runner generated it correctly.", $false, 'error')
     exit 1
 }
 
@@ -40,7 +40,7 @@ if (!(Test-Path $coverageReportFile)) {
 $interLogger.invoke($logname, "Uploading coverage report to Codecov for {kv:module=$ModuleName}", $false, 'info')
 try {
     & $codecovUploaderPath upload-process -r "$gitgroup/$ModuleName" -t $ENV:CODECOV_TOKEN -f $coverageReportFile -v # -v for verbose output
-    $interLogger.invoke($logname, "Codecov upload completed for {kv:module=$ModuleName}", $false, 'info')
+    $interLogger.invoke($logname, "Uploaded the coverage report to Codecov {kv:module=$ModuleName}", $false, 'success')
 }
 catch {
     throw [System.Exception]::new("Codecov upload failed: $($_.Exception.Message)")

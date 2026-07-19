@@ -22,47 +22,47 @@ $logname                    = "deploy-stage-gitlab-package"
 if (!$prerelease -or $prerelease.Length -eq 0) { $ModuleVersion = $ModuleVersion }
 else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 
-$interLogger.invoke($logname, "GitLab package push to {kv:url=$gitlab_uri/$NugetProjectPath} for {kv:module=$ModuleName} version {kv:version=$ModuleVersion}", $false, 'info')
+$interLogger.invoke($logname, "Starting GitLab package deployment {kv:module=$ModuleName} {kv:version=$ModuleVersion} {kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'info')
 
 try {
-  $interLogger.invoke($logname, "Registering Gitlab: $gitlab_uri/$NugetProjectPath", $false, 'info')
+  $interLogger.invoke($logname, "Registering the GitLab NuGet source {kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'info')
   #dotnet nuget add source $gitlab_uri/$NugetProjectPath --name gitlab --username $GitLab_Username --password $ENV:GITLAB_API_KEY
   nuget sources add -name "gitlab_$projectid_$ModuleName`_Packages" -source $gitlab_uri/$NugetProjectPath -username $GitLab_Username -password $env:GITLAB_API_KEY
-  $interLogger.invoke($logname, "Successfully registered Gitlab: $gitlab_uri/$NugetProjectPath", $false, 'info')
+  $interLogger.invoke($logname, "Registered the GitLab NuGet source {kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'success')
 }
 catch [system.exception] {
-  $interLogger.invoke($logname, "Failed to register Gitlab: $gitlab_uri/$NugetProjectPath", $false, 'error')
+  $interLogger.invoke($logname, "Failed to register the GitLab NuGet source {err:kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'error')
   $interLogger.invoke($logname, $_.Exception.Message, $false, 'error')
   exit 1
 }
 
 # check if package already exists
 try {
-  $interLogger.invoke($logname, "Checking if package exists: $gitlab_uri/$NugetProjectPath", $false, 'info')
+  $interLogger.invoke($logname, "Checking for an existing GitLab package {kv:module=$ModuleName} {kv:version=$ModuleVersion}", $false, 'info')
   $response = Invoke-WebRequest -Uri "https://gitlab.com/api/v4/projects/$projectid/packages/nuget/$ModuleName/$ModuleVersion"
   if ($response.StatusCode -eq 200) {
-    $interLogger.invoke($logname, "Package already exists: $gitlab_uri/$NugetProjectPath", $false, 'info')
+    $interLogger.invoke($logname, "GitLab package already exists; skipping deployment {kv:module=$ModuleName} {kv:version=$ModuleVersion}", $false, 'info')
     exit 0
   }
-  $interLogger.invoke($logname, "Package does not exist, proceeding to push: $gitlab_uri/$NugetProjectPath", $false, 'info')
+  $interLogger.invoke($logname, 'GitLab package does not exist; continuing with deployment', $false, 'info')
 }
 catch {
-  $interLogger.invoke($logname, "Failed to check if package exists: $gitlab_uri/$NugetProjectPath", $false, 'error')
+  $interLogger.invoke($logname, "Unable to determine whether the GitLab package exists {err:kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'error')
 }
 
 try {
-  $interLogger.invoke($logname, "Pushing $modulename to Gitlab: $gitlab_uri/$NugetProjectPath", $false, 'info')
+  $interLogger.invoke($logname, "Publishing the package to GitLab {kv:module=$modulename} {kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'info')
   #dotnet nuget push ./dist/nuget/$modulename.$SemVerVersion.nupkg --source gitlab 
   nuget push ./dist/nuget/$ModuleName.$ModuleVersion.nupkg -Source "gitlab_$projectid_$ModuleName`_Packages" -ApiKey $env:GITLAB_API_KEY
   
   if ($LASTEXITCODE -ne 0) {
-    $interLogger.invoke($logname, "nuget push failed with exit code $LASTEXITCODE", $false, 'error')
+    $interLogger.invoke($logname, "NuGet push failed {err:kv:exitcode=$LASTEXITCODE}", $false, 'error')
     exit 1
   }
   nuget sources remove -Name "gitlab_$projectid_$ModuleName`_Packages"
 }
 catch [system.exception] {
-  $interLogger.invoke($logname, "Failed to push $modulename to Gitlab: $gitlab_uri/$NugetProjectPath", $false, 'error')
+  $interLogger.invoke($logname, "Failed to publish the package to GitLab {err:kv:module=$modulename} {err:kv:url=$gitlab_uri/$NugetProjectPath}", $false, 'error')
   $interLogger.invoke($logname, $_.Exception.Message, $false, 'error')
   exit 1
 }

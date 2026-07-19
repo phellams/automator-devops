@@ -80,24 +80,17 @@ $psgal_generic_package = $generic_package | Where-Object {$_.file_name -match "$
 $tar_generic_package   = $generic_package | Where-Object {$_.file_name -match "$modulename.$moduleversion-tar.gz"} | Sort-Object created_at | Select-Object -First 1                      
 
 
-$interLogger.invoke($logname, "DEBUG INFO: GENERIC PACKAGE", $false, 'info')
-[console]::writeline("{ URLS }====================================")
+$interLogger.invoke($logname, 'Resolved generic package URLs', $false, 'info')
 $kv.invoke("NUGET NUPKG URL", "$($nuget_generic_package.download_url)")
 $kv.invoke("CHOCO NUPKG URL", "$($choco_generic_package.download_url)")
 $kv.invoke("PSGAL ZIP URL", "$($psgal_generic_package.download_url)")
 $kv.invoke("GENERIC TAR.GZ URL", "$($tar_generic_package.download_url)")
-[console]::writeline("{ HASHES }====================================")
+$interLogger.invoke($logname, 'Resolved generic package checksums', $false, 'info')
 $kv.invoke("NUGET NUPKG HASH", "$($nuget_generic_package.file_sha256)")
 $kv.invoke("CHOCO NUPKG HASH", "$($choco_generic_package.file_sha256)")
 $kv.invoke("PSGAL ZIP HASH", "$($psgal_generic_package.file_sha256)")
 $kv.invoke("GENERIC TAR.GZ HASH", "$($tar_generic_package.file_sha256)")
 
-[console]::writeline("====================================")
-$nuget_generic_package
-$choco_generic_package
-$psgal_generic_package
-$tar_generic_package
-[console]::writeline("====================================")
 
 
 # Generation Release notes with commitfusion using -OnlyAhead param switch
@@ -127,7 +120,7 @@ $release_template = $release_template -replace 'REPONAME_PLACE_HOLDER', "$module
                                       -replace 'GENERIC_TAR.GZ_HASH', $tar_generic_package.file_sha256 `
                                       -replace 'RELEASE_NOTES', $release_notes
 
-$interLogger.invoke($logname, "Constructing Assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
+$interLogger.invoke($logname, "Constructing release assets for {kv:module=$gitgroup/$modulename}", $false, 'info')
 
 $assets = @{
   links = @(
@@ -156,10 +149,7 @@ $body = @{
     assets      = $assets
 } | ConvertTo-Json -Depth 10
 
-$interLogger.invoke($logname, "DEBUG INFO", $false, 'info')
-[console]::writeline("====================================")
-$body
-[console]::writeline("====================================")
+$interLogger.invoke($logname, 'Constructed the GitLab release request', $false, 'info')
 
 try {
   $interLogger.invoke($logname, "Creating release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
@@ -169,11 +159,11 @@ try {
                                 -Headers @{ "PRIVATE-TOKEN" = "$env:GITLAB_API_KEY"; "Content-Type"  = "application/json" } `
                                 -Body $body 
   
-  $interLogger.invoke($logname, "Successfully created release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}", $false, 'info')
-  $interLogger.invoke($logname, "Release URL: {kv:url=$($response._links.self)}", $false, 'info')
+  $interLogger.invoke($logname, "Created the GitLab release {kv:version=$ModuleVersion} {kv:module=$gitgroup/$modulename}", $false, 'success')
+  $interLogger.invoke($logname, "GitLab release URL {kv:url=$($response._links.self)}", $false, 'info')
 }
 catch {
-    $interLogger.invoke($logname, "Failed to create release {kv:version=$ModuleVersion} for {kv:module=$gitgroup/$modulename}: {kv:error=$($_.exception.message)}", $false, 'error')
+    $interLogger.invoke($logname, "Failed to create the GitLab release {err:kv:version=$ModuleVersion} {err:kv:module=$gitgroup/$modulename} {err:kv:error=$($_.exception.message)}", $false, 'error')
     $_
     exit 1
 }

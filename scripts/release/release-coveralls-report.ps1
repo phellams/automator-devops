@@ -20,7 +20,7 @@ $coverageReportFilePath = "./coverage.xml"
 #---CONFIG----------------------------
 
 #------------------------------------
-$interLogger.invoke($logname, "Starting Coveralls Coverage Report Upload for {kv:module=$ModuleName}", $false, 'info')
+$interLogger.invoke($logname, "Starting Coveralls coverage upload for {kv:module=$ModuleName}", $false, 'info')
 # 1. Verify Coveralls executable exists in PATH
 # Get-Command is more robust for checking if an executable is truly available.
 # Using -ErrorAction Stop ensures immediate termination on failure.
@@ -29,13 +29,13 @@ try {
     $interLogger.invoke($logname, "Found Coveralls executable: {kv:path=$($coverallsCommand.Source)}", $false, 'info')
 }
 catch {
-    $interLogger.invoke($logname, "Unable to find Coveralls executable: {kv:name=$coveralls}. Please ensure it's installed and accessible.", $false, 'error')
+    $interLogger.invoke($logname, "Coveralls executable was not found {err:kv:name=$coveralls}", $false, 'error')
     exit 1
 }
 
 # 2. Verify the coverage report file exists
 if (!(Test-Path $coverageReportFilePath)) {
-    $interLogger.invoke($logname, "Coverage report file not found at {kv:path=$coverageReportFilePath}. Please ensure your test runner generated it correctly.", $false, 'error')
+    $interLogger.invoke($logname, "Coverage report was not found {err:kv:path=$coverageReportFilePath}", $false, 'error')
     exit 1 
 }
 
@@ -47,7 +47,7 @@ if ([string]::IsNullOrWhiteSpace("$env:coveralls_token")) {
 $interLogger.invoke($logname, "Coveralls repository token environment variable found.", $false, 'info')
 # 4. Execute the Coveralls report command
 
-[console]::writeline("Executing Coveralls upload command...")
+$interLogger.invoke($logname, 'Executing the Coveralls upload command', $false, 'info')
 try {
     # It's good practice to explicitly include the coverage file,
     # as Coveralls needs to know where to find the data.
@@ -74,10 +74,10 @@ try {
     # Or if your test runner produces Cobertura XML:
     # & $coverallsExe report --repo-token=$ENV:COVERALLS_REPO_TOKEN_COMMITFUSION --cobertura $coverageReportFilePath
 
-    [console]::writeline("Coveralls upload command executed successfully.")
+    $interLogger.invoke($logname, 'Coveralls upload command completed', $false, 'success')
 }
 catch {
     throw [System.Exception]::new("Error during Coveralls upload: $($_.Exception.Message)")
 }
 
-[console]::writeline("--- Coveralls Coverage Report Upload Completed ---")
+$interLogger.invoke($logname, "Completed Coveralls coverage upload for {kv:module=$ModuleName}", $false, 'success')

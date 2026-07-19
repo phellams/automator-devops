@@ -29,11 +29,11 @@ if ($VersioningStyle -eq "conventional") {
     $AutoVersion = (Get-GitAutoVersion).Version
 }
 
-$interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
-$interLogger.invoke($logname, "Creating dist folders", $false, 'info')
+$interLogger.invoke($logname, "Starting module build for {kv:module=$ModuleName}", $false, 'info')
+$interLogger.invoke($logname, 'Creating distribution directories', $false, 'info')
 
 if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {                                                                         
-    $interlogger.invoke($logname, "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
+    $interlogger.invoke($logname, "Generating PHWriter help metadata for {kv:module=$modulename}", $false, 'info')
 
     # ps1 script to generate phwriter metadata for cmdlets
     # exports will be stored in json, phwriter cant load help data from json Using
@@ -67,11 +67,11 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
 
         #$json_output_path = "./libs/help_metadata/$($cmdlet_name.tolower())_phwriter_metadata.json"
         $helpdata  | ConvertTo-Json -Depth 5 | Out-File -FilePath $json_output_path -Force -Encoding UTF8
-        $interlogger.invoke("generated", "help metadata for {kv:cmdlet=$cmdlet_name} at {kv:path=$json_output_path}", $true, 'info')
+        $interlogger.invoke('metadata', "Generated help metadata for {kv:cmdlet=$cmdlet_name} {kv:path=$json_output_path}", $true, 'success')
     }
 
 } else {
-    $interLogger.invoke($logname, "PHWriter metadata file not found at {kv:path=./phwriter-metadata.ps1}", $false, 'warning')
+    $interLogger.invoke($logname, "PHWriter metadata file was not found {wrn:kv:path=./phwriter-metadata.ps1}", $false, 'warn')
 }
 
 # Create dist folder
@@ -89,7 +89,7 @@ if (!(Test-Path -Path "./dist/$moduleName/tools")) {
     New-Item -Path "./dist/$moduleName/tools" -ItemType Directory 
 }
 
-$interLogger.invoke($logname, "Copying files to dist {inf:kv:BuildSource=PSMPacker}", $false, 'info')
+$interLogger.invoke($logname, "Copying module files to the distribution directory {inf:kv:source=PSMPacker}", $false, 'info')
 
 # Copy module files to dist for packaging
 [string]$SourcePath = "./"
@@ -123,14 +123,14 @@ if (Test-Path -Path "./dist/$ModuleName/LICENSE") {
     New-Item -ItemType File -Path "./dist/$ModuleName/tools/LICENSE.txt"
     Get-Content -Path "./dist/$ModuleName/LICENSE" | Out-File "./dist/$ModuleName/tools/LICENSE.txt"
    # Copy-Item -Path "./dist/$ModuleName/LICENSE" -Destination "./dist/$ModuleName/tools/LICENSE.txt" -Force
-    $interLogger.invoke($logname, "CHOCO DEPENDANCY: LICENSE -> tools/LICENSE.txt <- compliance", $false, 'info')
+    $interLogger.invoke($logname, 'Copied the license for Chocolatey package compliance {kv:path=tools/LICENSE.txt}', $false, 'info')
 }
 
 
 #!FIX: rename README.md to readme.md as nuget is case sensitive
 if (Test-Path -Path "./dist/$ModuleName/README.md") {
     Rename-Item -Path "./dist/$ModuleName/README.md" -NewName "readme.md" -Force
-    $interLogger.invoke($logname, "Renamed README.md to readme.md for nuget compliance", $false, 'info')
+    $interLogger.invoke($logname, 'Renamed README.md for NuGet package compliance {kv:file=readme.md}', $false, 'info')
 }
 
 # Create ENV as Choco image does not support powershell execution
@@ -151,7 +151,7 @@ if (!$prerelease -or $prerelease.Length -eq 0) { $moduleversion = $moduleversion
 else { $moduleversion = "$moduleversion-$prerelease" }
 
 $interLogger.invoke($logname, "Module version is {kv:version=$moduleversion}", $false, 'info')
-$interLogger.invoke($logname, "Generating build env {kv:path=./build.env}", $false, 'info')
+$interLogger.invoke($logname, "Generating build environment file {kv:path=./build.env}", $false, 'info')
 
 New-Item -Type File -Path "build.env" -Force -Value $null
 
@@ -181,11 +181,11 @@ Set-Location "./dist/$ModuleName"
 
 New-VerificationFile -RootPath "./" -OutputPath "./tools" | Format-Table
 
-$interLogger.invoke($logname, "CsVerify generated verification files", $false, 'info')
+$interLogger.invoke($logname, 'CsVerify generated the verification files', $false, 'success')
 
 # Test Verifications.txt
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
 Test-Verification -Path "./" | Format-Table
-$interLogger.invoke($logname, "Verification files tested", $false, 'info')
+$interLogger.invoke($logname, 'Verification files passed validation', $false, 'success')
 
 Set-Location ../../

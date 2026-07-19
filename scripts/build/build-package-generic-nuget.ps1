@@ -6,7 +6,7 @@ $kv = $global:__automator_devops.kvinc
 #---UI ELEMENTS Shortened------------
 $logname = "build-stage"
 
-$interLogger.invoke($logname, "Running build on nuspec for nuget {inf:kv:buildMethod=NUPSFORGE}", $false, 'info')
+$interLogger.invoke($logname, 'Starting generic NuGet package build {inf:kv:method=NupsForge}', $false, 'info')
 
 #---CONFIG----------------------------
 $ModuleConfig   = (Get-Content -Path ./build_config.json | ConvertFrom-Json).PSModule
@@ -53,4 +53,4 @@ $module_output_path = [system.io.path]::combine($pwd, "dist", "nuget")
 New-NuspecPackageFile @NuSpecParams
 New-NupkgPackage -Path $module_source_path -OutPath $module_output_path -CI
 
-$interLogger.invoke($logname, "Successfully created NuGet package for {kv:module=$ModuleName} version {kv:version=$ModuleVersion}", $false, 'info')
+$interLogger.invoke($logname, "Created the generic NuGet package {kv:module=$ModuleName} {kv:version=$ModuleVersion}", $false, 'success')

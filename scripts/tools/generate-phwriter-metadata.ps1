@@ -19,7 +19,7 @@ else { $ModuleVersion = "$ModuleVersion-$prerelease" }
 $interlogger = $global:__automator_devops.interLogger
 # ==== GLOBAL VARIABLES ====
 
-$interlogger.invoke($logname, "Generating PHWriter help meta data for {kv:module=$modulename}", $false, 'info')
+$interlogger.invoke($logname, "Generating PHWriter help metadata for {kv:module=$modulename}", $false, 'info')
 
 # ps1 script to generate phwriter metadata for cmdlets
 # exports will be stored in json, phwriter cant load help data from json Using
@@ -50,5 +50,5 @@ foreach ($helpdata in $phwriter_metadata_array) {
 
     $json_output_path = ".\libs\help_metadata\$($cmdlet_name.tolower())_phwriter_metadata.json"
     $helpdata  | ConvertTo-Json -Depth 5 | Out-File -FilePath $json_output_path -Force -Encoding UTF8
-    $interlogger.invoke("generate", "help metadata for {kv:cmdlet=$cmdlet_name} at {kv:path=$json_output_path}", $false, 'info')
+    $interlogger.invoke('metadata', "Generated help metadata for {kv:cmdlet=$cmdlet_name} {kv:path=$json_output_path}", $true, 'success')
 }
