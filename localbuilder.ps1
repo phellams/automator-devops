@@ -5,6 +5,15 @@ using module ./scripts/core/core.psm1
 param (
     [switch]$Automator,
     [switch]$build_dotnet_lib,
+    [switch]$DotNetBuild,
+    [switch]$DotNetPackage,
+    [switch]$NativePackage,
+    [ValidateSet('linux-x64', 'win-x64', 'osx-arm64')]
+    [string[]]$RuntimeIdentifier,
+    [ValidateSet('Debug', 'Release')]
+    [string]$Configuration = 'Release',
+    [ValidatePattern('^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$')]
+    [string]$Version,
     [switch]$Build,
     [switch]$PsGal,
     [switch]$Nuget,
@@ -31,11 +40,22 @@ $logname = "builder"
 
 $interLogger.invoke($logname, "Running Build on {kv:module=$ModuleName} ", $false, 'info')
 
-if (!$build) {
+$ModuleBuildRequested = $Build -or $PsGal -or $Nuget -or $ChocoNuSpec -or $ChocoPackage -or $ChocoPackageWindows -or $Phwriter -or $pester
+$DotNetBuildRequested = $build_dotnet_lib -or $DotNetBuild -or $DotNetPackage -or $NativePackage
 
-    $interLogger.invoke($logname, "Build is required all other build options", $false, 'error')
+if (!$ModuleBuildRequested -and !$DotNetBuildRequested -and !$cleanup) {
+
+    $interLogger.invoke($logname, "Specify a module or .NET build option", $false, 'error')
 
     return;
+}
+
+if (($PsGal -or $Nuget -or $ChocoNuSpec -or $ChocoPackage -or $ChocoPackageWindows) -and !$Build) {
+    throw [System.ArgumentException]::new('PowerShell module packaging options require -Build.')
+}
+
+if ($NativePackage -and @($RuntimeIdentifier).Count -eq 0) {
+    throw [System.ArgumentException]::new('-NativePackage requires -RuntimeIdentifier.')
 }
 
 # Remove dist folder if it exists
@@ -48,7 +68,7 @@ else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 # TODO: #2 
 # local build on windows
 # TODO: add included modules from Phellam-Automator for Consisitance once all depenancies are released, as above move to psgal or gitlab once released
-if ($isWindows -and !$Automator) {
+if ($isWindows -and !$Automator -and $ModuleBuildRequested) {
     
     $interLogger.invoke($logname, "Importing local modules from 'G:\' {kv:ARC=Windows}", $false, 'info')
     
@@ -61,7 +81,7 @@ if ($isWindows -and !$Automator) {
 
 }
 # linux build
-if ($isLinux -and !$Automator) {
+if ($isLinux -and !$Automator -and $ModuleBuildRequested) {
 
     $interlogger.invoke($logname, "Importing local modules from /mnt/g/devspace/projects/powershell/_repos/ {kv:ARC=Linux}", $false, 'info')
 
@@ -85,6 +105,8 @@ if ($Automator) {
     [string]$scripts_to_run = ""
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
     $build_dotnet_library       = "./automator-devops/scripts/build/build-dotnet-library.ps1;"
+    $build_dotnet_managed       = "./scripts/build/Build-PHWriterDotNet.ps1 -Configuration $Configuration -SkipPack$(if ($Version) { " -Version '$Version'" });"
+    $build_dotnet_package       = "./automator-devops/scripts/build/build-dotnet-native-aot.ps1 -Mode Package -Configuration $Configuration$(if ($Version) { " -Version '$Version'" });"
     $build_package_generic_nuget = "./automator-devops/scripts/build/build-package-generic-nuget.ps1;"
     $build_choco_nuspec          = "./automator-devops/scripts/build/build-nuspec-choco.ps1;"
     $build_package_psgallery     = "./automator-devops/scripts/build/build-package-psgallery.ps1;"
@@ -96,6 +118,15 @@ if ($Automator) {
     if ($pester) { $scripts_to_run += $pester_test_script } # psmodule
     if ($build) { $scripts_to_run += $build_Module } # psmodule
     if ($build_dotnet_lib) { $scripts_to_run += $build_dotnet_library } # .net
+    if ($DotNetBuild) { $scripts_to_run += $build_dotnet_managed } # managed .NET outputs
+    if ($DotNetPackage) { $scripts_to_run += $build_dotnet_package } # Phwriter.Core NuGet package
+    if ($NativePackage) {
+        foreach ($rid in $RuntimeIdentifier) {
+            $nativeVersion = if ($Version) { " -Version '$Version'" } else { '' }
+            $scripts_to_run += "./automator-devops/scripts/build/build-dotnet-native-aot.ps1 -Mode NativeAot -RuntimeIdentifier '$rid' -Configuration $Configuration$nativeVersion;"
+            $scripts_to_run += "./automator-devops/scripts/release/stage-native-aot-artifacts.ps1 -RuntimeIdentifier '$rid'$nativeVersion;"
+        }
+    }
     if ($psgal) { $scripts_to_run += $build_package_psgallery } # psmodule
     if ($nuget) { $scripts_to_run += $build_package_generic_nuget } # psmodule, dotnet
     if ($Phwriter) { $scripts_to_run += $tools_phwriter_metadata } # psmodule
@@ -116,7 +147,29 @@ if ($Automator) {
 # =================================
 # BUILD SCRIPTS
 # =================================
-if ($dotnet8_lib) { ./automator-devops/scripts/build/build-dotnet-library.ps1 }
+if ($build_dotnet_lib -and !$Automator) { ./automator-devops/scripts/build/build-dotnet-library.ps1 }
+if ($DotNetBuild -and !$Automator) {
+    $DotNetBuildParameters = @{ Configuration = $Configuration; SkipPack = $true }
+    if ($Version) { $DotNetBuildParameters.Version = $Version }
+    ./scripts/build/Build-PHWriterDotNet.ps1 @DotNetBuildParameters
+}
+if ($DotNetPackage -and !$Automator) {
+    $DotNetPackageParameters = @{ Mode = 'Package'; Configuration = $Configuration }
+    if ($Version) { $DotNetPackageParameters.Version = $Version }
+    ./automator-devops/scripts/build/build-dotnet-native-aot.ps1 @DotNetPackageParameters
+}
+if ($NativePackage -and !$Automator) {
+    foreach ($rid in $RuntimeIdentifier) {
+        $NativeBuildParameters = @{ Mode = 'NativeAot'; RuntimeIdentifier = $rid; Configuration = $Configuration }
+        $NativeStageParameters = @{ RuntimeIdentifier = $rid }
+        if ($Version) {
+            $NativeBuildParameters.Version = $Version
+            $NativeStageParameters.Version = $Version
+        }
+        ./automator-devops/scripts/build/build-dotnet-native-aot.ps1 @NativeBuildParameters
+        ./automator-devops/scripts/release/stage-native-aot-artifacts.ps1 @NativeStageParameters
+    }
+}
 if ($pester -and !$automator) { ./automator-devops/scripts/test/test-pester-before-build.ps1 }
 if ($Sa -and !$automator) { ./automator-devops/scripts/test/test-sa-before-build.ps1 }
 if ($build -and !$Automator) { ./automator-devops/scripts/build/build-module.ps1 }

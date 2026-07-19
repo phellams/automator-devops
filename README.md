@@ -48,6 +48,12 @@ The local build script `./automator/devops/scripts/localbuilder.ps1` can be used
 |---|---|
 | **`-Automator`** | Build using [phellams-automator](https://gitlab.com/phellams/phellams-automator) docker image, if not script will look for powershell locally dependancies must be met see below: **Dependecies Modules(linux/Winx64)**, **Dependecies Binaries(linux/Winx64)** |
 | **`-build_dotnet_lib`** | Calls `build-dotnet-library.ps1` which calls `dotnet build` and `donet Pack` commands to release and or pack .nupkg of libs (WIP(works but needs ironing out some bugs)) |
+| **`-DotNetBuild`** | Builds the configured managed .NET solution without creating a package. |
+| **`-DotNetPackage`** | Builds and packages the configured managed library as a NuGet package. |
+| **`-NativePackage`** | Builds a Native AOT executable and stages a release ZIP with its SHA-256 checksum. Requires `-RuntimeIdentifier`. |
+| **`-RuntimeIdentifier`** | Native target RID. PHWriter accepts `linux-x64`, `win-x64`, and `osx-arm64`; multiple values are supported on compatible build hosts. |
+| **`-Configuration`** | Managed build configuration: `Debug` or `Release`. Default: `Release`. |
+| **`-Version`** | Optional SemVer package and artifact version. |
 | **`-PhWriter`** | Generates the `phwriter-metadata.ps1` file using [phwriter](https://gitlab.com/phellams/phwriter) module |
 | **`-Pester`** | Calls `test-pester-before-build.ps1` witch calls `Invoke-Pester` from [Pester](https://github.com/pester/Pester) module |
 | **`-Sa`** | Calls `test-sa-before-build.ps1` witch calls `Invoke-ScriptAnalyzer` from [ScriptAnalyzer](https://github.com/PowerShell/PSScriptAnalyzer) module |
@@ -85,6 +91,18 @@ pwsh ./automator/devops/scripts/localbuilder.ps1 -build -choconupkgwindows -phwr
 
 ```powershell
 pwsh ./automator/devops/scripts/localbuilder.ps1 -build -phwriter -choconuspec -ChocoPackage
+```
+
+🟪 Build a managed NuGet package
+
+```powershell
+pwsh ./automator-devops/localbuilder.ps1 -DotNetPackage -Configuration Release -Version 0.19.0
+```
+
+🟪 Build and stage a Native AOT release package
+
+```powershell
+pwsh ./automator-devops/localbuilder.ps1 -NativePackage -RuntimeIdentifier linux-x64 -Configuration Release -Version 0.19.0
 ```
 
 ## **Build Config**
