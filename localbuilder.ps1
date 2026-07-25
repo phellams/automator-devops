@@ -68,19 +68,19 @@ else { New-Item -Path .\ -Name "dist" -ItemType Directory }
 # NOTE: =====================================
 # NOTE: LOCAL MACHINE ONLY WITH MODULES LOCATED IN G:\ AND /MNT/G/
 # TODO: #1 Once all required modules are release, change to pull from the psgal or from gitlab directly
-# TODO: #2 
+# TODO: #2
 # local build on windows
 # TODO: add included modules from Phellam-Automator for Consisitance once all depenancies are released, as above move to psgal or gitlab once released
 if ($isWindows -and !$Automator -and $ModuleBuildRequested) {
-    
+
     $interLogger.invoke($logname, "Importing local build dependencies {kv:path=G:\} {kv:platform=Windows}", $false, 'info')
-    
+
     import-module -Name G:\devspace\projects\powershell\_repos\commitfusion\; # Get-GitAutoVerion extracted and used as standalone
     import-module -name G:\devspace\projects\powershell\_repos\quicklog\;
     import-module -name G:\devspace\projects\powershell\_repos\shelldock\;
-    import-module -name G:\devspace\projects\powershell\_repos\psmpacker\; 
-    import-module -Name G:\devspace\projects\powershell\_repos\nupsforge\; 
-    import-module -name G:\devspace\projects\powershell\_repos\csverify\; 
+    import-module -name G:\devspace\projects\powershell\_repos\psmpacker\;
+    import-module -Name G:\devspace\projects\powershell\_repos\nupsforge\;
+    import-module -name G:\devspace\projects\powershell\_repos\csverify\;
 
 }
 # linux build
@@ -108,7 +108,7 @@ if ($Automator) {
     [string]$scripts_to_run = ""
     $build_Module                = "./automator-devops/scripts/build/build-module.ps1;"
     $build_dotnet_library       = "./automator-devops/scripts/build/build-dotnet-library.ps1;"
-    $build_dotnet_managed       = "./scripts/build/Build-PHWriterDotNet.ps1 -Configuration $Configuration -SkipPack$(if ($Version) { " -Version '$Version'" });"
+    $build_dotnet_managed       = "./scripts/build/Build-DotNet.ps1 -Configuration $Configuration -SkipPack$(if ($Version) { " -Version '$Version'" });"
     $build_dotnet_package       = "./automator-devops/scripts/build/build-dotnet-native-aot.ps1 -Mode Package -Configuration $Configuration$(if ($Version) { " -Version '$Version'" });"
     $build_package_generic_nuget = "./automator-devops/scripts/build/build-package-generic-nuget.ps1;"
     $build_choco_nuspec          = "./automator-devops/scripts/build/build-nuspec-choco.ps1;"
@@ -122,7 +122,7 @@ if ($Automator) {
     if ($build) { $scripts_to_run += $build_Module } # psmodule
     if ($build_dotnet_lib) { $scripts_to_run += $build_dotnet_library } # .net
     if ($DotNetBuild) { $scripts_to_run += $build_dotnet_managed } # managed .NET outputs
-    if ($DotNetPackage) { $scripts_to_run += $build_dotnet_package } # Phwriter.Core NuGet package
+    if ($DotNetPackage) { $scripts_to_run += $build_dotnet_package } # UHWriter.Core NuGet package
     if ($NativePackage) {
         foreach ($rid in $RuntimeIdentifier) {
             $nativeVersion = if ($Version) { " -Version '$Version'" } else { '' }
@@ -134,7 +134,7 @@ if ($Automator) {
     if ($nuget) { $scripts_to_run += $build_package_generic_nuget } # psmodule, dotnet
     if ($Phwriter) { $scripts_to_run += $tools_phwriter_metadata } # psmodule
     if ($ChocoNuSpec) { $scripts_to_run += $build_choco_nuspec  } # psmodule
-    if ($ChocoPackage) { 
+    if ($ChocoPackage) {
         if(!$ChocoNuSpec -or !$build){
             throw [System.Exception]::new("ChocoMonoPackage requires ChocoNuSpec and Build")
         }
@@ -154,7 +154,7 @@ if ($build_dotnet_lib -and !$Automator) { ./automator-devops/scripts/build/build
 if ($DotNetBuild -and !$Automator) {
     $DotNetBuildParameters = @{ Configuration = $Configuration; SkipPack = $true }
     if ($Version) { $DotNetBuildParameters.Version = $Version }
-    ./scripts/build/Build-PHWriterDotNet.ps1 @DotNetBuildParameters
+    ./scripts/build/Build-DotNet.ps1 @DotNetBuildParameters
 }
 if ($DotNetPackage -and !$Automator) {
     $DotNetPackageParameters = @{ Mode = 'Package'; Configuration = $Configuration }
