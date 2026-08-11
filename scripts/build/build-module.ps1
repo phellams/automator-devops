@@ -32,7 +32,7 @@ if ($VersioningStyle -eq "conventional") {
 $interLogger.invoke($logname, "Starting module build for {kv:module=$ModuleName}", $false, 'info')
 $interLogger.invoke($logname, 'Creating distribution directories', $false, 'info')
 
-if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {                                                                         
+if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
     $interlogger.invoke($logname, "Generating PHWriter help metadata for {kv:module=$modulename}", $false, 'info')
 
     # ps1 script to generate phwriter metadata for cmdlets
@@ -62,7 +62,7 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
         $helpdata.indent = 1
         # Add source to each cmdlet propery
         $helpdata.CommandInfo.source = $source
-        
+
         $json_output_path = [System.IO.Path]::Join('./', 'libs', 'help_metadata', "$($cmdlet_name.tolower())_phwriter_metadata.json")
 
         #$json_output_path = "./libs/help_metadata/$($cmdlet_name.tolower())_phwriter_metadata.json"
@@ -75,8 +75,8 @@ if((Test-Path -Path './phwriter-metadata.ps1') -and $phwriter) {
 }
 
 # Create dist folder
-if (!(Test-Path -Path ./dist)){                                                                         
-    New-Item -Path './dist' -ItemType Directory 
+if (!(Test-Path -Path ./dist)){
+    New-Item -Path './dist' -ItemType Directory
 }
 
 # for build output
@@ -85,8 +85,8 @@ if (!(Test-Path -path "./dist/choco")) { mkdir "./dist/choco" }
 if (!(Test-Path -path "./dist/psgal")) { mkdir "./dist/psgal" }
 
 # for csverify
-if (!(Test-Path -Path "./dist/$moduleName/tools")) { 
-    New-Item -Path "./dist/$moduleName/tools" -ItemType Directory 
+if (!(Test-Path -Path "./dist/$moduleName/tools")) {
+    New-Item -Path "./dist/$moduleName/tools" -ItemType Directory
 }
 
 $interLogger.invoke($logname, "Copying module files to the distribution directory {inf:kv:source=PSMPacker}", $false, 'info')
@@ -116,7 +116,7 @@ if ($SourcePath -ne "./") {
     if (Test-Path "./README.md" -and -not (Test-Path "$SourcePath/README.md")) {
         Copy-Item -Path "./README.md" -Destination "./dist/$ModuleName/README.md" -Force
     }
-} 
+}
 
 # copy LICENCE to tools/LICENSE.txt
 if (Test-Path -Path "./dist/$ModuleName/LICENSE") {
@@ -137,7 +137,7 @@ if (Test-Path -Path "./dist/$ModuleName/README.md") {
 # Set the choco package name as a ENV and use choco push
 # Name will be pulled by the gitlab ci script and use to rename the choco package after choco pack
 if((Test-ModuleManifest -path "./dist/$ModuleName/$ModuleName.psd1")) {
-    $interLogger.invoke($logname, "Module manifest found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'info') 
+    $interLogger.invoke($logname, "Module manifest found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'info')
 } else {
     $interLogger.invoke($logname, "Module manifest not found at ./dist/$ModuleName/$ModuleName.psd1", $false, 'error')
     exit 1
@@ -177,15 +177,17 @@ Set-Content -Path "build.env" -Value $BuildEnvContent -Force -Encoding UTF8
 # Run CsVerify generate Verifications.txt for choco and for package verification.
 $interLogger.invoke($logname, "Running CsVerify to generate verification files", $false, 'info')
 
-Set-Location "./dist/$ModuleName"
+# Set-Location "./dist/$ModuleName"
+# Dist path
 
-New-VerificationFile -RootPath "./" -OutputPath "./tools" | Format-Table
+$distPath = Get-ItemProperty -Path [system.io.path]::Combine((Get-Location).path, "dist", $ModuleName)
+$distPath_tools = [system.io.path]::Combine($distPath.FullName, "tools")
+
+New-VerificationFile -RootPath "$($distPath.FullName)" -OutputPath "$distPath_tools" | Format-Table
 
 $interLogger.invoke($logname, 'CsVerify generated the verification files', $false, 'success')
 
 # Test Verifications.txt
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
-Test-Verification -Path "./" | Format-Table
+Test-Verification -Path "$($distPath.FullName)" | Format-Table
 $interLogger.invoke($logname, 'Verification files passed validation', $false, 'success')
-
-Set-Location ../../
