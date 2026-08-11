@@ -189,5 +189,5 @@ $interLogger.invoke($logname, 'CsVerify generated the verification files', $fals
 
 # Test Verifications.txt
 $interLogger.invoke($logname, "Testing verification files", $false, 'info')
-Test-Verification -Path "$($distPath.FullName)" | Format-Table
+Test-Verification -RootPath "$($distPath.FullName)" | Format-Table
 $interLogger.invoke($logname, 'Verification files passed validation', $false, 'success')
